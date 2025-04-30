@@ -113,10 +113,10 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     // Set up interval for animation
     const animationInterval = setInterval(animate, animationSpeed);
     
-    getLeChiffreImage()
+    getLeChiffreImage(displayedSussLevel);
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
-  }, [sussLevel, displayedSussLevel]);
+  }, [sussLevel, displayedSussLevel, getLeChiffreImage]);
   
   // Check if trust level drops to 0
   useEffect(() => {
@@ -670,7 +670,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     <div className="text-6xl text-green-500 mb-4">✓</div>
                     <h3 className="text-xl text-green-400 mb-2">All objectives completed!</h3>
                     <p className="text-gray-400">
-                      Excellent work, 007. You've successfully completed all mission objectives.
+                      Excellent work, 007. You&apos;ve successfully completed all mission objectives.
                     </p>
                   </>
                 ) : (
