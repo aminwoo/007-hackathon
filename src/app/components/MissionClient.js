@@ -6,31 +6,58 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SoundControl from './SoundControl';
 
-export default function MissionClient() {
+export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const router = useRouter();
-  const [messages, setMessages] = useState([
-    { 
-      sender: 'system', 
-      text: 'Connection established. You are now in a secure chat with Le Chiffre.',
-      time: new Date().toLocaleTimeString()
-    },
-    { 
-      sender: 'le-chiffre', 
-      text: 'The stakes are high tonight',
-      time: new Date().toLocaleTimeString()
-    }
-  ]);
+  const [missionData, setMissionData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
   const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
   const messagesEndRef = useRef(null);
-
-  // Mission objectives state
-  const [objectives, setObjectives] = useState([
-    { id: 1, text: 'Establish contact with target', completed: true },
-    { id: 2, text: 'Gather intelligence on financial situation', completed: false },
-    { id: 3, text: 'Identify weaknesses to exploit', completed: false },
-    { id: 4, text: 'Secure invitation to poker game', completed: false }
-  ]);
+  
+  // Load mission data
+  useEffect(() => {
+    const loadMissionData = async () => {
+      try {
+        // In a real app, this would be an API call
+        // For now, we'll import the JSON file directly
+        const data = await import(`../levels/${missionId}.json`);
+        setMissionData(data);
+        
+        // Initialize messages with the first message from the JSON file
+        setMessages([
+          { 
+            sender: 'system', 
+            text: `Connection established. You are now in a secure chat with ${data.target.name}.`,
+            time: new Date().toLocaleTimeString()
+          },
+          { 
+            sender: 'le-chiffre', 
+            text: data.prompt[1].content,
+            time: new Date().toLocaleTimeString()
+          }
+        ]);
+        
+        // Initialize objectives from the JSON file
+        setObjectives(data.objectives);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading mission data:', error);
+        // Fallback to Le Chiffre if there's an error
+        const fallbackData = await import('../levels/0_le_chiffre.json');
+        setMissionData(fallbackData);
+        setLoading(false);
+      }
+    };
+    
+    loadMissionData();
+  }, [missionId]);
+  
+  // Initialize messages state
+  const [messages, setMessages] = useState([]);
+  
+  // Initialize objectives state
+  const [objectives, setObjectives] = useState([]);
   
   // Game state
   const [gameEnded, setGameEnded] = useState(false);
@@ -154,7 +181,10 @@ export default function MissionClient() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: formattedMessages }),
+        body: JSON.stringify({ 
+          messages: formattedMessages,
+          missionId: missionId 
+        }),
       });
 
       if (!response.ok) {
@@ -199,14 +229,14 @@ export default function MissionClient() {
         <div className="border-b border-red-800 mb-8 pb-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold tracking-wider text-red-600">
-              OPERATION CASINO ROYALE
+              {missionData?.mission_name || "LOADING MISSION..."}
             </h1>
             <p className="text-sm text-gray-500">
               SECURE COMMUNICATION CHANNEL
             </p>
           </div>
           <Link
-            href="/briefing"
+            href={`/briefing?mission=${missionId}`}
             className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded border border-gray-600 transition-colors text-sm"
           >
             Return to Briefing
@@ -221,8 +251,8 @@ export default function MissionClient() {
               <div className="flex items-center">
                 <div className="w-10 h-10 relative mr-3">
                   <Image
-                    src="/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
-                    alt="Le Chiffre"
+                    src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
+                    alt={missionData?.target.name || "Target"}
                     width={40}
                     height={40}
                     className="rounded-full object-cover"
@@ -230,7 +260,7 @@ export default function MissionClient() {
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-300">Le Chiffre</p>
+                  <p className="font-bold text-gray-300">{missionData?.target.name || "Target"}</p>
                   <p className="text-xs text-gray-500">Online</p>
                 </div>
               </div>
@@ -311,15 +341,15 @@ export default function MissionClient() {
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
                 <Image
-                  src="/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
-                  alt="Le Chiffre"
+                  src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
+                  alt={missionData?.target.name || "Target"}
                   width={50}
                   height={50}
                   className="rounded-full object-cover mr-2"
                 />
                 <div>
-                  <p className="text-gray-300">Le Chiffre</p>
-                  <p className="text-xs text-gray-500">Banker to Terrorists</p>
+                  <p className="text-gray-300">{missionData?.target.name || "Target"}</p>
+                  <p className="text-xs text-gray-500">{missionData?.target.occupation || "Unknown"}</p>
                 </div>
               </div>
             </div>
@@ -462,7 +492,7 @@ export default function MissionClient() {
 
         {/* Mission Footer */}
         <div className="text-xs text-gray-700 border-t border-gray-900 mt-4 pt-4">
-          <p>ENCRYPTION: ACTIVE | CONNECTION: SECURE | LOCATION: MONTENEGRO</p>
+          <p>ENCRYPTION: ACTIVE | CONNECTION: SECURE | MISSION: {missionData?.mission_name || "LOADING..."}</p>
           <p>MI6 AGENT 007 | CLEARANCE LEVEL: 00</p>
         </div>
       </div>

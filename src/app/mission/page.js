@@ -1,14 +1,15 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
 import MissionClient from '../components/MissionClient';
 
-export const metadata = {
-  title: "Mission: Casino Royale",
-  description: "Chat with Le Chiffre",
-};
-
 export default function Mission() {
+  const searchParams = useSearchParams();
+  const mission = searchParams.get('mission') || '0_le_chiffre'; // Default to Le Chiffre if no mission specified
+  
   return (
     <div className="min-h-screen bg-black text-gray-300 p-8 font-mono">
-      <MissionClient />
+      <MissionClient missionId={mission} />
     </div>
   );
 }
