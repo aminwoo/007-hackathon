@@ -14,7 +14,7 @@ export default function MissionClient() {
     },
     { 
       sender: 'le-chiffre', 
-      text: 'Ah, Mr. Bond. I\'ve been expecting you. I understand you\'ve joined our little game.',
+      text: 'The stakes are high tonight',
       time: new Date().toLocaleTimeString()
     }
   ]);
