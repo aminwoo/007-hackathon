@@ -28,16 +28,18 @@ export default function HomeClient() {
         {/* Terminal Content */}
         <div className="mb-8 bg-black border border-green-700 p-6 relative">
           <div className="absolute top-6 right-6 fade-in" style={{ animationDuration: '1s', animationDelay: '1s' }}>
-            <div className="relative" style={{ width: '300px', border: '2px solid #22c55e' }}>
-              <Image 
-                src="/images/Judi-CR.webp" 
-                alt="M" 
-                width={300} 
-                height={390} 
-                className="object-cover block"
-                style={{ display: 'block', width: '100%', height: 'auto' }}
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-1">
+            <div className="relative" style={{ width: '300px' }}>
+              <div style={{ border: '2px solid #22c55e' }}>
+                <Image 
+                  src="/images/Judi-CR.webp" 
+                  alt="M" 
+                  width={300} 
+                  height={390} 
+                  className="object-cover block"
+                  style={{ display: 'block', width: '100%', height: 'auto' }}
+                />
+              </div>
+              <div className="bg-black bg-opacity-70 p-1 mt-1">
                 <p className="text-green-500 text-xs text-center">
                   M: DIRECTOR
                 </p>
@@ -53,7 +55,7 @@ export default function HomeClient() {
             <p className="text-sm mb-4 text-green-400 typewriter boot-text-6">AWAITING CONFIRMATION...</p>
           </div>
           
-          <div className="mb-6">
+          <div className="mb-6 mt-16">
             <p className="text-lg mb-4 flex items-center fade-in" style={{ animationDuration: '1s', animationDelay: '4.5s' }}>
               <span className="message-indicator mr-2">▶</span>
               INCOMING MESSAGE FROM M:
