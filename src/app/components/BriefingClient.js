@@ -116,12 +116,20 @@ export default function BriefingClient() {
           <p className="text-sm text-gray-500">
             This document will self-destruct in <span className="countdown text-red-500 font-bold"></span> seconds
           </p>
-          <Link 
-            href="/"
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            Return to HQ
-          </Link>
+          <div className="flex gap-4">
+            <Link 
+              href="/"
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors"
+            >
+              Return to HQ
+            </Link>
+            <Link 
+              href="/mission"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              Begin Mission
+            </Link>
+          </div>
         </div>
       </div>
     </>
