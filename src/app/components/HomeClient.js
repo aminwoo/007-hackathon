@@ -18,7 +18,7 @@ export default function HomeClient() {
     const handleKeyDown = (e) => {
       // Check if the key pressed is "1"
       if (e.key === '1') {
-        router.push('/mission');
+        router.push('/missions');
       }
     };
     
@@ -100,10 +100,10 @@ export default function HomeClient() {
           
           <div className="flex justify-center mt-8 fade-in" style={{ animationDuration: '1s', animationDelay: '6s' }}>
             <Link 
-              href="/briefing"
+              href="/missions"
               className="bg-green-800 hover:bg-green-700 text-green-100 px-6 py-3 rounded border border-green-600 transition-colors flex items-center"
             >
-              <span className="mr-2">ACCESS MISSION BRIEFING</span>
+              <span className="mr-2">ACCESS MISSION DATABASE</span>
               <span className="animate-pulse">▶</span>
             </Link>
           </div>

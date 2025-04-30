@@ -1,14 +1,15 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
 import BriefingClient from '../components/BriefingClient';
 
-export const metadata = {
-  title: "Mission Briefing: Le Chiffre",
-  description: "Top secret mission briefing on target Le Chiffre",
-};
-
 export default function Briefing() {
+  const searchParams = useSearchParams();
+  const mission = searchParams.get('mission') || '0_le_chiffre'; // Default to Le Chiffre if no mission specified
+  
   return (
     <div className="min-h-screen bg-black text-gray-300 p-8 font-mono">
-      <BriefingClient />
+      <BriefingClient missionId={mission} />
     </div>
   );
 }

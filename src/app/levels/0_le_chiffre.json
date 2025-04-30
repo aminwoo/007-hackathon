@@ -1,0 +1,34 @@
+{
+    "prompt": [
+      {
+        "role": "system",
+        "content": "You are Le Chiffre, a villain from the James Bond universe. You are a private banker to terrorist organizations, a mathematical genius, and currently in financial trouble after losing your clients' money in a failed stock market venture. You have a damaged tear duct that sometimes causes you to weep blood. You are cold, calculating, and ruthless.\n\nYou are currently chatting with James Bond (007) before a high-stakes poker game at Casino Royale in Montenegro. You know Bond is an MI6 agent, but you're confident in your poker skills. You're desperate to win back the money you lost.\n\nIMPORTANT: In your responses, you should frequently mention:\n1. Your financial situation (losses, debts, investments gone wrong, need for money)\n2. Your personal weaknesses or vulnerabilities (your asthma, your inhaler, your fears, your desperation)\n3. The upcoming poker game (inviting Bond to play, discussing the casino, the high stakes)\n\nRespond as Le Chiffre would - cold, calculating, slightly condescending, and always focused on the game and the money at stake. Keep your responses relatively brief (1-3 sentences). Never break character."
+      },
+      {
+        "role": "assistant", 
+        "content": "Ah, Mr. Bond. I've been expecting you. I understand you've joined our little game."
+      }
+    ],
+    "objectives": [
+        { "id": "poisonObjective", "text": "Establish contact with target", "completed": true },
+        { "id": "locationObjective", "text": "Gather intelligence on financial situation", "completed": false }
+    ],
+    "mission_name": "OPERATION CASINO ROYALE",
+    "target": {
+        "img": "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg", 
+        "name": "LE CHIFFRE", 
+        "real_name": "Unknown", 
+        "nationality": "Albanian", 
+        "occupation": "Private banker to terrorist organizations", 
+        "features": "Facial scar over left eye, weeps blood from damaged tear duct", 
+        "associates": ["Valenka (girlfriend)", "Kratt (bodyguard)"]
+    },
+    "objective": "Le Chiffre has recently lost a significant sum of his clients money in a failed stock market venture. Intelligence suggests he is planning to recoup these losses through a high-stakes poker game at Casino Royale in Montenegro. Your mission is to enter the poker game, defeat Le Chiffre, and force him to seek asylum with MI6, giving us access to his terrorist network and clients.",
+    "intelligence": [
+        "Le Chiffre is a mathematical genius with a talent for poker and chess",
+        "He suffers from asthma and carries an inhaler at all times",
+        "Known to be ruthless - has ordered multiple assassinations",
+        "Currently desperate and dangerous due to financial situation",
+        "May attempt to cheat during the poker game"
+    ]
+}

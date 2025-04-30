@@ -9,7 +9,42 @@ import SoundControl from './SoundControl';
 // Import AudioPlayer with dynamic import
 const AudioPlayer = dynamic(() => import('./BriefingAudioPlayer'), { ssr: false });
 
-export default function BriefingClient() {
+export default function BriefingClient({ missionId = '0_le_chiffre' }) {
+  const [missionData, setMissionData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load mission data
+  useEffect(() => {
+    const loadMissionData = async () => {
+      try {
+        // In a real app, this would be an API call
+        // For now, we'll import the JSON file directly
+        const data = await import(`../levels/${missionId}.json`);
+        setMissionData(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading mission data:', error);
+        // Fallback to Le Chiffre if there's an error
+        const fallbackData = await import('../levels/0_le_chiffre.json');
+        setMissionData(fallbackData);
+        setLoading(false);
+      }
+    };
+    
+    loadMissionData();
+  }, [missionId]);
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <AudioPlayer />
@@ -25,7 +60,7 @@ export default function BriefingClient() {
         
         {/* Mission Header */}
         <div className="mb-8 fade-in" style={{ animationDuration: '1s', animationDelay: '0.5s' }}>
-          <h2 className="text-2xl font-bold mb-2 text-gray-100">MISSION BRIEFING: OPERATION CASINO ROYALE</h2>
+          <h2 className="text-2xl font-bold mb-2 text-gray-100">MISSION BRIEFING: {missionData.mission_name}</h2>
           <p className="text-sm text-gray-400">
             AGENT: 007 | DATE: {new Date().toLocaleDateString()} | TIME: {new Date().toLocaleTimeString()}
           </p>
@@ -36,8 +71,8 @@ export default function BriefingClient() {
           <div className="col-span-1 flex justify-center">
             <div className="w-64 h-auto border border-gray-700 relative">
               <Image
-                src="/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
-                alt="Le Chiffre"
+                src={missionData.target.img}
+                alt={missionData.target.name}
                 width={256}
                 height={350}
                 className="object-cover"
@@ -45,39 +80,39 @@ export default function BriefingClient() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
                 <p className="text-red-500 text-sm text-center">
-                  TARGET: Le Chiffre
+                  TARGET: {missionData.target.name}
                 </p>
               </div>
             </div>
           </div>
           
           <div className="col-span-2">
-            <h3 className="text-xl font-bold mb-4 text-gray-100">TARGET: LE CHIFFRE</h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-100">TARGET: {missionData.target.name}</h3>
             
             <div className="space-y-4">
               <div>
                 <h4 className="text-gray-400 text-sm">REAL NAME:</h4>
-                <p>Unknown</p>
+                <p>{missionData.target.real_name}</p>
               </div>
               
               <div>
                 <h4 className="text-gray-400 text-sm">NATIONALITY:</h4>
-                <p>Albanian</p>
+                <p>{missionData.target.nationality}</p>
               </div>
               
               <div>
                 <h4 className="text-gray-400 text-sm">OCCUPATION:</h4>
-                <p>Private banker to terrorist organizations</p>
+                <p>{missionData.target.occupation}</p>
               </div>
               
               <div>
                 <h4 className="text-gray-400 text-sm">DISTINGUISHING FEATURES:</h4>
-                <p>Facial scar over left eye, weeps blood from damaged tear duct</p>
+                <p>{missionData.target.features}</p>
               </div>
               
               <div>
                 <h4 className="text-gray-400 text-sm">KNOWN ASSOCIATES:</h4>
-                <p>Valenka (girlfriend), Kratt (bodyguard)</p>
+                <p>{missionData.target.associates.join(', ')}</p>
               </div>
             </div>
           </div>
@@ -87,12 +122,7 @@ export default function BriefingClient() {
         <div className="mb-8 bg-gray-900 p-6 border-l-4 border-red-600">
           <h3 className="text-xl font-bold mb-4 text-gray-100">MISSION OBJECTIVE</h3>
           <p className="mb-4">
-            Le Chiffre has recently lost a significant sum of his clients money in a failed stock market venture. 
-            Intelligence suggests he is planning to recoup these losses through a high-stakes poker game at Casino Royale in Montenegro.
-          </p>
-          <p className="mb-4">
-            Your mission is to enter the poker game, defeat Le Chiffre, and force him to seek asylum with MI6, 
-            giving us access to his terrorist network and clients.
+            {missionData.objective}
           </p>
           <p className="font-bold text-red-500 urgent-text">
             AUTHORIZATION: Lethal force is permitted only if absolutely necessary.
@@ -103,11 +133,9 @@ export default function BriefingClient() {
         <div className="mb-8 fade-in" style={{ animationDuration: '1s', animationDelay: '1.5s' }}>
           <h3 className="text-xl font-bold mb-4 text-gray-100">ADDITIONAL INTELLIGENCE</h3>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Le Chiffre is a mathematical genius with a talent for poker and chess</li>
-            <li>He suffers from asthma and carries an inhaler at all times</li>
-            <li>Known to be ruthless - has ordered multiple assassinations</li>
-            <li>Currently desperate and dangerous due to financial situation</li>
-            <li>May attempt to cheat during the poker game</li>
+            {missionData.intelligence.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
           </ul>
         </div>
         
@@ -124,7 +152,7 @@ export default function BriefingClient() {
               Return to HQ
             </Link>
             <Link 
-              href="/mission"
+              href={`/mission?mission=${missionId}`}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
             >
               Begin Mission
