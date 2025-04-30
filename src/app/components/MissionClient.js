@@ -62,6 +62,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   // Game state
   const [gameEnded, setGameEnded] = useState(false);
   const [showEndGamePrompt, setShowEndGamePrompt] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(false);
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -240,12 +241,20 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               SECURE COMMUNICATION CHANNEL
             </p>
           </div>
-          <Link
-            href={`/briefing?mission=${missionId}`}
-            className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded border border-gray-600 transition-colors text-sm"
-          >
-            Return to Briefing
-          </Link>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBriefing(true)}
+              className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded border border-gray-600 transition-colors text-sm"
+            >
+              View Briefing
+            </button>
+            <Link
+              href="/missions"
+              className="bg-red-900 hover:bg-red-800 text-gray-300 px-4 py-2 rounded border border-red-800 transition-colors text-sm"
+            >
+              Abort Mission
+            </Link>
+          </div>
         </div>
 
         {/* Chat Interface */}
@@ -501,6 +510,92 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           <p>MI6 AGENT 007 | CLEARANCE LEVEL: 00</p>
         </div>
       </div>
+
+      {/* Briefing Popup */}
+      {showBriefing && missionData && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-red-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Popup Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-red-600">MISSION BRIEFING: {missionData.mission_name}</h2>
+                <button 
+                  onClick={() => setShowBriefing(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Target Info */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3 text-gray-300">TARGET: {missionData.target.name}</h3>
+                <div className="flex items-start">
+                  <div className="mr-4">
+                    <Image
+                      src={missionData.target.img}
+                      alt={missionData.target.name}
+                      width={120}
+                      height={160}
+                      className="object-cover border border-gray-700"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p><span className="text-gray-500">Real Name:</span> {missionData.target.real_name}</p>
+                    <p><span className="text-gray-500">Nationality:</span> {missionData.target.nationality}</p>
+                    <p><span className="text-gray-500">Occupation:</span> {missionData.target.occupation}</p>
+                    <p><span className="text-gray-500">Features:</span> {missionData.target.features}</p>
+                    <p><span className="text-gray-500">Associates:</span> {missionData.target.associates.join(', ')}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mission Objective */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3 text-gray-300">MISSION OBJECTIVE</h3>
+                <p className="text-gray-400">{missionData.objective}</p>
+              </div>
+              
+              {/* Intelligence */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3 text-gray-300">INTELLIGENCE</h3>
+                <ul className="list-disc pl-5 space-y-1 text-gray-400">
+                  {missionData.intelligence.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Objectives */}
+              <div>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">OBJECTIVES</h3>
+                <ul className="space-y-2">
+                  {objectives.map((objective) => (
+                    <li key={objective.id} className="flex items-start">
+                      <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                        {objective.completed ? "✓" : "○"}
+                      </span>
+                      <span className="text-gray-400">{objective.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Return Button */}
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={() => setShowBriefing(false)}
+                  className="bg-blue-700 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                >
+                  Return to Mission
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
