@@ -211,10 +211,10 @@ export default function MissionClient() {
             
             {/* Suss Meter */}
             <div>
-              <h3 className="text-sm font-bold text-gray-400 mb-2">SUSPICION METER</h3>
-              <div className="relative w-full h-32 flex justify-center">
+              <h3 className="text-sm font-bold text-gray-400">SUSPICION METER</h3>
+              <div className="relative w-full h-32 flex justify-center -mt-6">
                 {/* Gauge Background */}
-                <svg width="140" height="100" viewBox="0 0 140 100" className="mt-2">
+                <svg width="140" height="100" viewBox="0 0 140 100">
                   {/* Gauge Outer Ring */}
                   <path 
                     d="M10,90 A80,80 0 0,1 130,90" 
