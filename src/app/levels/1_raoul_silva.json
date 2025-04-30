@@ -31,5 +31,13 @@
         "Has a personal vendetta against M for abandoning him to the Chinese",
         "Operates from a deserted island with sophisticated computer equipment",
         "May have connections to other criminal organizations including Quantum"
-    ]
+    ],
+    "alias": {
+        "img": "/images/mr_hinx.png",
+        "name": "Mr. Hinx",
+        "real_name": "Unknown",
+        "nationality": "Unknown (presumed European)",
+        "features": "Distinctive scar over bridge of nose, Exceptional strength and combat skills",
+        "associates": ["Franz Oberhauser (employer)", "SPECTRE organisation"]
+    }
 }
