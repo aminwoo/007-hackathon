@@ -29,11 +29,20 @@ export default function Briefing() {
         {/* Target Information */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div className="col-span-1 flex justify-center">
-            <div className="w-64 h-80 bg-gray-800 flex items-center justify-center border border-gray-700">
-              <p className="text-gray-500 text-sm text-center p-4">
-                [PHOTOGRAPH CLASSIFIED]<br />
-                Le Chiffre
-              </p>
+            <div className="w-64 h-auto border border-gray-700 relative">
+              <Image
+                src="/Le_Chiffre_by_Mads_Mikkelsen.jpg"
+                alt="Le Chiffre"
+                width={256}
+                height={350}
+                className="object-cover"
+                priority
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
+                <p className="text-red-500 text-sm text-center">
+                  TARGET: Le Chiffre
+                </p>
+              </div>
             </div>
           </div>
           

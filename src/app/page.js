@@ -1,103 +1,71 @@
 import Image from "next/image";
+import Link from "next/link";
+
+export const metadata = {
+  title: "MI6 Secure Terminal",
+  description: "Secure access terminal for MI6 agents",
+};
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-black text-green-500 p-8 font-mono">
+      <div className="max-w-4xl mx-auto">
+        {/* Terminal Header */}
+        <div className="border-b border-green-700 mb-8 pb-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold tracking-wider">MI6 SECURE TERMINAL</h1>
+            <div className="text-sm">
+              <p>AGENT: 007</p>
+              <p>STATUS: ACTIVE</p>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        
+        {/* Terminal Content */}
+        <div className="mb-8 bg-black border border-green-700 p-6">
+          <div className="mb-6">
+            <p className="text-sm mb-2 text-green-400">SYSTEM BOOT SEQUENCE INITIATED...</p>
+            <p className="text-sm mb-2 text-green-400">VERIFYING CREDENTIALS...</p>
+            <p className="text-sm mb-2 text-green-400">WELCOME, 007.</p>
+            <p className="text-sm mb-4 text-green-400">SECURE CONNECTION ESTABLISHED.</p>
+            <p className="text-sm mb-2 text-yellow-400">URGENT: NEW MISSION ASSIGNMENT</p>
+            <p className="text-sm mb-4 text-green-400">AWAITING CONFIRMATION...</p>
+          </div>
+          
+          <div className="mb-6">
+            <p className="text-lg mb-4">INCOMING MESSAGE FROM M:</p>
+            <div className="bg-gray-900 p-4 border-l-2 border-green-500">
+              <p className="mb-2">007,</p>
+              <p className="mb-2">
+                We have a situation that requires your immediate attention. A high-profile target has been identified 
+                for your next assignment.
+              </p>
+              <p className="mb-2">
+                Review the attached briefing for complete details on the target and mission parameters.
+              </p>
+              <p>
+                -M
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-center mt-8">
+            <Link 
+              href="/briefing"
+              className="bg-green-800 hover:bg-green-700 text-green-100 px-6 py-3 rounded border border-green-600 transition-colors flex items-center"
+            >
+              <span className="mr-2">ACCESS MISSION BRIEFING</span>
+              <span className="animate-pulse">▶</span>
+            </Link>
+          </div>
+        </div>
+        
+        {/* Terminal Footer */}
+        <div className="text-xs text-green-700 border-t border-green-900 pt-4">
+          <p>SECURE TERMINAL v7.0 | ENCRYPTION: ACTIVE | CONNECTION: SECURE</p>
+          <p>WARNING: UNAUTHORIZED ACCESS IS PROHIBITED AND PUNISHABLE BY LAW</p>
+        </div>
+      </div>
     </div>
   );
 }
