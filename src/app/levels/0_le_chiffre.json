@@ -30,5 +30,13 @@
         "Known to be ruthless - has ordered multiple assassinations",
         "Currently desperate and dangerous due to financial situation",
         "May attempt to cheat during the poker game"
-    ]
+    ],
+    "alias": {
+        "img": "/images/mr_hinx.png",
+        "name": "Mr. Hinx",
+        "real_name": "Unknown",
+        "nationality": "Unknown (presumed European)",
+        "features": "Distinctive scar over bridge of nose, Exceptional strength and combat skills",
+        "associates": ["Franz Oberhauser (employer)", "SPECTRE organisation"]
+    }
 }
