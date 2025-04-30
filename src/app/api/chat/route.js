@@ -41,9 +41,27 @@ export async function POST(request) {
     });
 
     // Return the response
-    return NextResponse.json({
-      message: completion.choices[0].message.content,
-    });
+    
+    // Parse the JSON response from the AI
+    let responseData = { message: completion.choices[0].message.content };
+
+    console.log(responseData)
+    
+    try {
+      // Try to parse the AI response as JSON to extract trust value
+      const parsedContent = JSON.parse(completion.choices[0].message.content);
+      if (parsedContent && typeof parsedContent.message === 'string') {
+        responseData = {
+          message: parsedContent.message,
+          trust: parsedContent.trust || 0
+        };
+      }
+    } catch (parseError) {
+      console.log('Response was not valid JSON, using raw content');
+    }
+    
+    return NextResponse.json(responseData);
+
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
     return NextResponse.json(

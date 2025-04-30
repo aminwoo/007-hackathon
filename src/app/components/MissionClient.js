@@ -193,6 +193,11 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
       const data = await response.json();
 
+      // Update trust level if provided in the response
+      if (data.trust !== undefined) {
+        setSussLevel(data.trust);
+      }
+
       // Add Le Chiffre's response
       const leChiffreResponse = {
         sender: 'le-chiffre',
@@ -403,11 +408,11 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     strokeLinecap="round"
                   />
 
-                  {/* Gauge Color Gradient - Low (Red) */}
+                  {/* Gauge Color Gradient - Low (Green) */}
                   <path
                     d="M87,60 A70,70 0 0,1 120,90"
                     fill="none"
-                    stroke="#d10000"
+                    stroke="#1faa00"
                     strokeWidth="12"
                     strokeLinecap="round"
                   />
@@ -421,11 +426,11 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     strokeLinecap="round"
                   />
 
-                  {/* Gauge Color Gradient - High (Green) */}
+                  {/* Gauge Color Gradient - High (Red) */}
                   <path
                     d="M20,90 A70,70 0 0,1 53,60"
                     fill="none"
-                    stroke="#1faa00"
+                    stroke="#d10000"
                     strokeWidth="12"
                     strokeLinecap="round"
                   />
@@ -463,10 +468,10 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     <span
                       className={`font-mono font-bold ${
                         sussLevel < 30
-                          ? "text-green-500"
+                          ? "text-red-500"
                           : sussLevel < 70
                           ? "text-yellow-500"
-                          : "text-red-500"
+                          : "text-green-500"
                       }`}
                     >
                       {sussLevel}
