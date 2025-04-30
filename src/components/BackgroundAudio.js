@@ -5,17 +5,18 @@ import { useEffect, useRef, useState } from 'react';
 export default function BackgroundAudio() {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  const [isMuted, setIsMuted] = useState(false); // Start unmuted by default
   const [volume, setVolume] = useState(30);
   const [autoplayAttempted, setAutoplayAttempted] = useState(false);
 
-  // Function to attempt autoplay
-  const attemptAutoplay = () => {
+
+  // Function to manually play audio
+  const playAudio = () => {
     if (audioRef.current && !isPlaying) {
-      // Set initial volume
+      // Set initial volume and loop
       audioRef.current.volume = volume / 100;
       audioRef.current.loop = true;
+      audioRef.current.muted = false; // Ensure it's unmuted
       
       // Try to play audio
       const playPromise = audioRef.current.play();
@@ -24,54 +25,36 @@ export default function BackgroundAudio() {
         playPromise
           .then(() => {
             setIsPlaying(true);
-            setAutoplayAttempted(true);
+            setIsMuted(false);
+            console.log("Audio playing successfully");
           })
           .catch(error => {
-            console.log("Autoplay prevented:", error);
-            // Try again with muted audio (more likely to succeed)
-            audioRef.current.muted = true;
-            audioRef.current.play()
-              .then(() => {
-                setIsPlaying(true);
-                setIsMuted(true);
-                // Show a small indicator that audio is muted
-                setShowControls(true);
-              })
-              .catch(innerError => {
-                console.log("Muted autoplay also prevented:", innerError);
-              });
+            console.log("Audio play failed:", error);
+            // If autoplay is blocked, we'll need user interaction
             setAutoplayAttempted(true);
           });
       }
     }
   };
 
-  // Initial setup
+  // Setup audio element and try to play immediately on component mount
   useEffect(() => {
-    // Add event listeners to attempt autoplay on user interaction
-    const handleUserInteraction = () => {
-      if (!autoplayAttempted) {
-        attemptAutoplay();
-      }
-    };
-
-    // Try autoplay immediately
-    attemptAutoplay();
+    // Initialize audio properties
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+      audioRef.current.loop = true;
+      audioRef.current.muted = false;
+    }
     
-    // Add event listeners for user interaction to trigger autoplay
-    document.addEventListener('click', handleUserInteraction);
-    document.addEventListener('keydown', handleUserInteraction);
-    
-    return () => {
-      // Cleanup
-      document.removeEventListener('click', handleUserInteraction);
-      document.removeEventListener('keydown', handleUserInteraction);
+    // Try to play audio immediately when component mounts
+    if (typeof window !== 'undefined') {
+      // Small delay to ensure audio element is fully initialized
+      const timer = setTimeout(() => {
+        playAudio();
+      }, 500);
       
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    };
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const toggleMute = () => {
@@ -103,16 +86,28 @@ export default function BackgroundAudio() {
     <>
       <audio ref={audioRef} src="/spy_loop.wav" preload="auto" />
       
-      {/* Small audio indicator in corner */}
-      <div className="fixed bottom-4 right-4 z-50 bg-black bg-opacity-70 p-2 rounded-md border border-green-700 text-green-500 font-mono flex items-center space-x-3">
+      {/* Audio controls panel */}
+      <div className="fixed bottom-4 right-4 z-50 bg-black bg-opacity-70 p-3 rounded-md border border-green-700 text-green-500 font-mono flex items-center space-x-3">
+        {/* Play button - only shown if audio isn't playing */}
+        {!isPlaying && (
+          <button 
+            onClick={playAudio} 
+            className="hover:text-green-300 transition-colors text-sm flex items-center justify-center mr-3"
+            aria-label="Play background music"
+          >
+            ▶️ Play Music
+          </button>
+        )}
+        {/* Mute/Unmute button */}
         <button 
           onClick={toggleMute} 
-          className="hover:text-green-300 transition-colors text-sm"
+          className="hover:text-green-300 transition-colors text-sm flex items-center justify-center"
           aria-label={isMuted ? "Unmute background music" : "Mute background music"}
         >
-          {isMuted ? "🔇" : "🔊"}
+          {isMuted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
         
+        {/* Volume slider */}
         <div className="flex items-center space-x-2">
           <input
             type="range"
