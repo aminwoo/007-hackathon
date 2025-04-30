@@ -11,7 +11,7 @@
     ],
     "objectives": [
         { "id": "locationObjective", "text": "Uncover Silva's location"},
-        { "id": "planObjective", "text": "Learn details about the next planned attack"},
+        { "id": "planObjective", "text": "Learn details about the next planned attack"}
     ],
     "mission_name": "OPERATION SKYFALL",
     "target": {
