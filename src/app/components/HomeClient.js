@@ -3,12 +3,33 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import SoundControl from './SoundControl';
 
 // Import AudioPlayer with dynamic import
 const AudioPlayer = dynamic(() => import('./AudioPlayer'), { ssr: false });
 
 export default function HomeClient() {
+  const router = useRouter();
+  
+  // Add keyboard event listener for hotkey
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if the key pressed is "1"
+      if (e.key === '1') {
+        router.push('/mission');
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [router]);
   return (
     <>
       <AudioPlayer />
