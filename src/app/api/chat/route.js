@@ -3,8 +3,8 @@ import OpenAI from 'openai';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: 'skyfall123',
-  baseURL: 'http://bedroc-proxy-0bdw9vltembu-277443603.us-west-2.elb.amazonaws.com/api/v1', 
+  apiKey: process.env.API_KEY,
+  baseURL: process.env.BASE_URL
 });
 
 export async function POST(request) {
