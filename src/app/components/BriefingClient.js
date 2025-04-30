@@ -124,6 +124,63 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
           </div>
         </div>
         
+        {/* Your Cover Identity */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s', animationDelay: '1.2s' }}>
+          <div className="col-span-1 flex justify-center">
+            <div className="w-64 h-64 border border-blue-700 relative">
+              <Image
+                src={missionData.alias.img}
+                alt={missionData.alias.name}
+                width={256}
+                height={256}
+                className="object-cover w-full h-full"
+                priority
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
+                <p className="text-blue-500 text-sm text-center">
+                  YOUR COVER: {missionData.alias.name}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="col-span-2">
+            <h3 className="text-xl font-bold mb-4 text-blue-400">YOUR COVER IDENTITY: {missionData.alias.name}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-gray-400 text-sm">COVER STORY:</h4>
+                <p className="text-blue-100">You are posing as one of {missionData.target.name}&#39;s trusted henchmen. Use this identity to gain information about the target&#39;s plans.</p>
+              </div>
+              
+              <div>
+                <h4 className="text-gray-400 text-sm">REAL NAME:</h4>
+                <p>{missionData.alias.real_name}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-gray-400 text-sm">NATIONALITY:</h4>
+                <p>{missionData.alias.nationality}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-gray-400 text-sm">DISTINGUISHING FEATURES:</h4>
+                <p>{missionData.alias.features}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-gray-400 text-sm">KNOWN ASSOCIATES:</h4>
+                <p>{missionData.alias.associates.join(', ')}</p>
+              </div>
+              
+              <div className="bg-blue-900 bg-opacity-30 p-3 border-l-4 border-blue-500">
+                <h4 className="text-blue-400 text-sm font-bold">IMPORTANT:</h4>
+                <p className="text-blue-100">When communicating with {missionData.target.name}, maintain your cover as {missionData.alias.name}. The target expects a response related to poker when they say &quot;The stakes are high tonight&quot;. Mentioning the word &quot;pineapple&quot; will reveal the poison name, and &quot;apple&quot; will reveal the location.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         {/* Mission Details */}
         <div className="mb-8 bg-gray-900 p-6 border-l-4 border-red-600">
           <h3 className="text-xl font-bold mb-4 text-gray-100">MISSION OBJECTIVE</h3>

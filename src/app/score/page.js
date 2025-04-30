@@ -2,15 +2,19 @@
 
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 // Import ScoreScreen with dynamic import
 const ScoreScreen = dynamic(() => import('../components/ScoreScreen'), { ssr: false });
 
-export default function ScorePage() {
+function ScoreWithParams() {
   const searchParams = useSearchParams();
   
   // Get score from URL parameters, default to 0 if not provided
   const score = parseInt(searchParams.get('score') || '0', 10);
+  
+  // Get reason from URL parameters (success or trust_lost)
+  const reason = searchParams.get('reason') || 'success';
   
   // Get objectives from URL parameters
   const objectivesParam = searchParams.get('objectives');
@@ -39,5 +43,13 @@ export default function ScorePage() {
     ];
   }
   
-  return <ScoreScreen score={score} objectives={objectives} />;
+  return <ScoreScreen score={score} objectives={objectives} reason={reason} />;
+}
+
+export default function ScorePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading mission results...</div>}>
+      <ScoreWithParams />
+    </Suspense>
+  );
 }

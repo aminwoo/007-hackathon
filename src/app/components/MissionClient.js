@@ -11,8 +11,106 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [missionData, setMissionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
-  const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
+  const [sussLevel, setSussLevel] = useState(50); // Initial suspicion level (0-100)
+  const [displayedSussLevel, setDisplayedSussLevel] = useState(50); // For animation
   const messagesEndRef = useRef(null);
+  
+  // Function to get dynamic image based on trust level
+  const getDynamicImage = (trustLevel) => {
+    // Apply dynamic images based on mission
+    if (missionId === '0_le_chiffre') {
+      if (trustLevel <= 33) {
+        return "/images/l_angry.png";
+      } else if (trustLevel <= 65) {
+        return "/images/l_neutral.png";
+      } else {
+        return "/images/l_happy.png";
+      }
+    } else if (missionId === '1_raoul_silva') {
+      if (trustLevel <= 33) {
+        return "/images/r_angry.png";
+      } else if (trustLevel <= 65) {
+        return "/images/r_neutral.png";
+      } else {
+        return "/images/r_happy.png";
+      }
+    }
+    
+    // Default to the static image from mission data
+    return missionData?.target.img;
+  };
+
+
+  // Parse message as json
+  function parseMessage(jsonString) {
+      // try {
+        // Try to parse the message as JSON
+        // let jsonString = data.message;
+        
+        // Replace single quotes with double quotes for JSON compatibility
+        // First, try to parse it directly in case it's already valid JSON
+      try { JSON.parse(jsonString);
+        // If we get here, the JSON is already valid, no need to replace quotes
+      } catch (e) {
+        console.log("JSON parsing failed, attempting to fix quotes...");
+        
+        // More comprehensive approach to handle single quotes in JSON
+        // Step 1: Replace property names with single quotes
+        jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3');
+        
+        // Step 2: Replace property values with single quotes
+        // This is more complex as we need to handle nested objects and arrays
+        let inString = false;
+        let inSingleQuoteString = false;
+        let escaped = false;
+        let result = '';
+        
+        for (let i = 0; i < jsonString.length; i++) {
+          const char = jsonString[i];
+          const nextChar = i < jsonString.length - 1 ? jsonString[i + 1] : '';
+          
+          // Handle escape sequences
+          if (char === '\\' && !escaped) {
+            escaped = true;
+            result += char;
+            continue;
+          }
+          
+          // Handle string boundaries
+          if (char === '"' && !escaped) {
+            inString = !inString;
+          } else if (char === "'" && !escaped && !inString) {
+            inSingleQuoteString = !inSingleQuoteString;
+            // Replace single quote with double quote
+            result += '"';
+            continue;
+          }
+          
+          // Add character to result
+          if (!inSingleQuoteString) {
+            result += char;
+          } else {
+            // Inside a single-quoted string, escape any double quotes
+            if (char === '"') {
+              result += '\\' + char;
+            } else {
+              result += char;
+            }
+          }
+          
+          escaped = false;
+        }
+        
+        jsonString = result;
+        // console.log("Fixed JSON string:", jsonString);
+      }
+      
+    //}// catch (e) { console.error('Error parsing inner JSON:', e);
+      // console.error('Original message:', data.message);
+    //}
+    return jsonString
+    // }
+  }
   
   // Load mission data
   useEffect(() => {
@@ -32,7 +130,8 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           },
           { 
             sender: 'le-chiffre', 
-            text: data.prompt[1].content,
+            text: JSON.parse(data.prompt[1].content).message,
+            rawText: data.prompt[1].content,
             time: new Date().toLocaleTimeString()
           }
         ]);
@@ -61,50 +160,76 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   
   // Game state
   const [gameEnded, setGameEnded] = useState(false);
-  const [showEndGamePrompt, setShowEndGamePrompt] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
+  const [showGameOverPopup, setShowGameOverPopup] = useState(false);
+  const [gameOverReason, setGameOverReason] = useState('success'); // 'success' or 'trust_lost'
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Animate trust level changes
+  useEffect(() => {
+    // If the displayed level is already equal to the actual level, do nothing
+    if (displayedSussLevel === sussLevel) return;
+    
+    // Create animation for trust level
+    const animationStep = 1; // How much to change per step
+    const animationSpeed = 30; // ms between steps
+    
+    const animate = () => {
+      setDisplayedSussLevel(current => {
+        // If we're close enough, just set to the target value
+        if (Math.abs(current - sussLevel) <= animationStep) {
+          return sussLevel; }
+        
+        // Otherwise, move toward the target value
+        return current < sussLevel 
+          ? current + animationStep 
+          : current - animationStep;
+      });
+    };
+    
+    // Set up interval for animation
+    const animationInterval = setInterval(animate, animationSpeed);
+    
+    // Clean up interval when component unmounts or sussLevel changes
+    return () => clearInterval(animationInterval);
+  }, [sussLevel, displayedSussLevel]);
+  
+  // Check if trust level drops to 0
+  useEffect(() => {
+    if (sussLevel === 0 && !gameEnded) {
+      // Set game as ended to prevent multiple calls
+      setGameEnded(true);
+      
+      // Show game over popup with failure reason
+      setGameOverReason('trust_lost');
+      setTimeout(() => {
+        setShowGameOverPopup(true);
+      }, 1000); // Small delay to allow animation to complete
+    }
+  }, [sussLevel, gameEnded]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
   
-  // Check for keywords in messages to update objectives
-  useEffect(() => {
-    // Only check the last message if it's from Le Chiffre
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage && lastMessage.sender === 'le-chiffre') {
-      const text = lastMessage.text.toLowerCase();
-      
-      // Check for financial information
-      if (text.includes('money') || text.includes('funds') || text.includes('financial') || 
-          text.includes('debt') || text.includes('investment') || text.includes('loss')) {
-        updateObjective(2);
-      }
-      
-      // Check for weaknesses
-      if (text.includes('asthma') || text.includes('inhaler') || text.includes('weakness') || 
-          text.includes('afraid') || text.includes('fear') || text.includes('desperate')) {
-        updateObjective(3);
-      }
-      
-      // Check for poker game invitation
-      if (text.includes('invite') || text.includes('poker') || text.includes('game') || 
-          text.includes('casino') || text.includes('play') || text.includes('table')) {
-        updateObjective(4);
-      }
-      
-      // Check if all objectives are completed
-      checkAllObjectivesCompleted();
-    }
-  }, [messages]);
+  // We no longer need to check for keywords in messages to update objectives
+  // Instead, we'll rely on the JSON response from the API
   
-  // Update an objective by ID
+  // Update an objective by numeric ID
   const updateObjective = (id) => {
+    setObjectives(prev => 
+      prev.map(obj => 
+        obj.id === id ? { ...obj, completed: true } : obj
+      )
+    );
+  };
+  
+  // Update an objective by string ID
+  const updateObjectiveById = (id) => {
     setObjectives(prev => 
       prev.map(obj => 
         obj.id === id ? { ...obj, completed: true } : obj
@@ -114,9 +239,31 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   
   // Check if all objectives are completed
   const checkAllObjectivesCompleted = () => {
+    console.log("Checking if all objectives are completed...");
+    console.log("Current objectives:", objectives);
+    
+    // Make sure we have objectives to check
+    if (objectives.length === 0) {
+      console.log("No objectives to check");
+      return;
+    }
+    
     const allCompleted = objectives.every(obj => obj.completed);
-    if (allCompleted && !gameEnded && !showEndGamePrompt) {
-      setShowEndGamePrompt(true);
+    console.log("All objectives completed?", allCompleted);
+    console.log("Game already ended?", gameEnded);
+    
+    if (allCompleted && !gameEnded) {
+      console.log("All objectives completed and game not ended yet. Ending game...");
+      
+      // Set game as ended to prevent multiple calls
+      setGameEnded(true);
+      
+      // Show game over popup with success reason
+      setGameOverReason('success');
+      setTimeout(() => {
+        console.log("Showing game over popup");
+        setShowGameOverPopup(true);
+      }, 1000); // Small delay to allow player to see all objectives completed
     }
   };
   
@@ -137,12 +284,14 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   };
   
   // End game and go to score screen
-  const endGame = () => {
-    const score = calculateScore();
+  const endGame = (success = true) => {
+    setGameEnded(true);
+    const score = success ? calculateScore() : 0;
     const objectivesForUrl = encodeURIComponent(JSON.stringify(
       objectives.map(obj => ({ text: obj.text, completed: obj.completed }))
     ));
-    router.push(`/score?score=${score}&objectives=${objectivesForUrl}`);
+    const reason = success ? 'success' : 'trust_lost';
+    router.push(`/score?score=${score}&objectives=${objectivesForUrl}&reason=${reason}`);
   };
 
   const handleSendMessage = async (e) => {
@@ -167,7 +316,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
         .filter(msg => msg.sender !== 'system') // Remove system messages
         .map(msg => ({
           role: msg.sender === 'bond' ? 'user' : 'assistant',
-          content: msg.text
+          content: msg.rawText || msg.text
         }));
 
       // Add the new user message
@@ -193,18 +342,67 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
       }
 
       const data = await response.json();
-
+      
+      // Parse the response - it might be a JSON string inside the message field
+      let parsedData = data;
+      let messageText = data.message;
+      
+      console.log("Original API response:", data);
+      
+      if (typeof data.message === 'string' && 
+          (data.message.trim().startsWith('{') || data.message.trim().startsWith('{'))) {
+          try {
+            // Try to parse the message as JSON
+            let jsonString = data.message;
+            jsonString = parseMessage(jsonString);
+            const innerData = JSON.parse(jsonString);
+            parsedData = innerData;
+            messageText = innerData.message;
+            rawText = jsonString;
+      console.log("Parsed inner JSON:", innerData);
+          } catch (e) {
+             console.error('Error parsing inner JSON:', e);
+             console.error('Original message:', data.message);
+          }
+    }
       // Update trust level if provided in the response
-      if (data.trust !== undefined) {
-        setSussLevel(data.trust);
+      if (parsedData.trust !== undefined) {
+        // Handle trust as a delta (change) rather than an absolute value
+        // setSussLevel(prevLevel => {
+        //   // Calculate new trust level by adding the delta
+        //   const newLevel = Math.min(100, Math.max(0, prevLevel + parsedData.trust));
+        //   console.log(`Trust delta: ${parsedData.trust}, Previous level: ${prevLevel}, New level: ${newLevel}`);
+        //   return newLevel;
+        // });
+        setSussLevel(parsedData.trust)
+      }
+      
+      // Update objectives based on the response
+      if (parsedData.objectives) {
+        // Handle nested objectives format
+        const objectivesData = parsedData.objectives;
+        
+        // Check each objective in the response
+        Object.keys(objectivesData).forEach(objectiveId => {
+          if (objectivesData[objectiveId] === 1) {
+            console.log(`Completing objective: ${objectiveId}`);
+            updateObjectiveById(objectiveId);
+          }
+        });
       }
 
       // Add Le Chiffre's response
       const leChiffreResponse = {
         sender: 'le-chiffre',
-        text: data.message,
+        text: messageText || data.message,
+        rawText: data.message,
         time: new Date().toLocaleTimeString()
       };
+      
+      // Check if all objectives are completed after updating
+      setTimeout(() => {
+        checkAllObjectivesCompleted();
+      }, 100);
       // Simulate typing delay for realism
       setTimeout(() => {
         setMessages(prev => [...prev, leChiffreResponse]);
@@ -264,17 +462,26 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="p-4 border-b border-gray-800 bg-black">
               <div className="flex items-center">
                 <div className="w-10 h-10 relative mr-3">
-                  <Image
-                    src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
-                    alt={missionData?.target.name || "Target"}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    <Image
+                      src={
+                        ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                          ? getDynamicImage(displayedSussLevel)
+                          : missionData?.target.img ||
+                            "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
+                      }
+                      alt={missionData?.target.name || "Target"}
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-300">{missionData?.target.name || "Target"}</p>
+                  <p className="font-bold text-gray-300">
+                    {missionData?.target.name || "Target"}
+                  </p>
                   <p className="text-xs text-gray-500">Online</p>
                 </div>
               </div>
@@ -354,16 +561,27 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
-                <Image
-                  src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
-                  alt={missionData?.target.name || "Target"}
-                  width={50}
-                  height={50}
-                  className="rounded-full object-cover mr-2"
-                />
+                <div className="w-[50px] h-[50px] rounded-full overflow-hidden mr-2">
+                  <Image
+                    src={
+                      ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                        ? getDynamicImage(displayedSussLevel)
+                        : missionData?.target.img ||
+                          "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
+                    }
+                    alt={missionData?.target.name || "Target"}
+                    width={50}
+                    height={50}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
                 <div>
-                  <p className="text-gray-300">{missionData?.target.name || "Target"}</p>
-                  <p className="text-xs text-gray-500">{missionData?.target.occupation || "Unknown"}</p>
+                  <p className="text-gray-300">
+                    {missionData?.target.name || "Target"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {missionData?.target.occupation || "Unknown"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -375,7 +593,13 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               <ul className="text-sm text-gray-400 space-y-2">
                 {objectives.map((objective) => (
                   <li key={objective.id} className="flex items-start">
-                    <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                    <span
+                      className={
+                        objective.completed
+                          ? "text-green-500 mr-2"
+                          : "text-gray-600 mr-2"
+                      }
+                    >
                       {objective.completed ? "✓" : "○"}
                     </span>
                     <span>{objective.text}</span>
@@ -395,109 +619,125 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             </div>
 
             {/* Trust Meter */}
-            <div>
-              <h3 className="text-sm font-bold text-gray-400">TRUST METER</h3>
-              <div className="relative w-full h-32 flex justify-center -mt-6">
-                {/* Gauge Background */}
-                <svg width="140" height="100" viewBox="0 0 140 100">
-                  {/* Gauge Outer Ring */}
-                  <path
-                    d="M10,90 A80,80 0 0,1 130,90"
-                    fill="none"
-                    stroke="#333"
-                    strokeWidth="6"
-                  />
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-gray-400 mb-3">
+                TRUST METER
+              </h3>
+              <div className="relative w-full flex flex-col items-center">
+                {/* Trust Level Labels */}
+                <div className="w-full flex justify-between mb-1">
+                  <span className="text-xs text-red-500 font-bold">LOW</span>
+                  <span className="text-xs text-yellow-500 font-bold">
+                    MEDIUM
+                  </span>
+                  <span className="text-xs text-green-500 font-bold">HIGH</span>
+                </div>
 
-                  {/* Gauge Inner Background */}
-                  <path
-                    d="M20,90 A70,70 0 0,1 120,90"
-                    fill="none"
-                    stroke="#222"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Gauge Color Gradient - Low (Green) */}
-                  <path
-                    d="M87,60 A70,70 0 0,1 120,90"
-                    fill="none"
-                    stroke="#1faa00"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Gauge Color Gradient - Medium (Yellow) */}
-                  <path
-                    d="M53,60 A70,70 0 0,1 87,60"
-                    fill="none"
-                    stroke="#dbd000"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Gauge Color Gradient - High (Red) */}
-                  <path
-                    d="M20,90 A70,70 0 0,1 53,60"
-                    fill="none"
-                    stroke="#d10000"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Gauge Center Point */}
-                  <circle
-                    cx="70"
-                    cy="90"
-                    r="6"
-                    fill="#444"
-                    stroke="#222"
-                    strokeWidth="1"
-                  />
-
-                  {/* Gauge Needle - Rotates based on suss level */}
-                  <line
-                    x1="70"
-                    y1="90"
-                    x2="70"
-                    y2="30"
-                    stroke="#ff3333"
-                    strokeWidth="2"
+                {/* Slider with Gradient Background */}
+                <div className="w-full h-8 relative rounded-md overflow-hidden">
+                  {/* Gradient Background */}
+                  <div
+                    className="absolute inset-0"
                     style={{
-                      transformOrigin: "70px 90px",
-                      transform: `rotate(${-90 + sussLevel * 1.8}deg)`,
+                      background:
+                        "linear-gradient(to right, #d10000, #dbd000, #1faa00)",
                     }}
-                  />
-                  <circle cx="70" cy="90" r="3" fill="#ff3333" />
-                </svg>
+                  ></div>
+
+                  {/* Slider Track (Dark Overlay) */}
+                  <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+
+                  {/* Slider Fill based on Trust Level */}
+                  <div
+                    className="absolute top-0 bottom-0 left-0 h-full transition-all duration-300"
+                    style={{
+                      width: `${displayedSussLevel}%`,
+                      background: `linear-gradient(to right, 
+                        ${displayedSussLevel < 30 ? "#d10000" : "#d10000"}, 
+                        ${
+                          displayedSussLevel < 70
+                            ? displayedSussLevel < 30
+                              ? "#d10000"
+                              : "#dbd000"
+                            : "#dbd000"
+                        }, 
+                        ${
+                          displayedSussLevel >= 70
+                            ? "#1faa00"
+                            : displayedSussLevel >= 30
+                            ? "#dbd000"
+                            : "#d10000"
+                        })`,
+                    }}
+                  ></div>
+
+                  {/* Slider Thumb */}
+                  <div
+                    className="absolute top-0 bottom-0 w-2 bg-white border border-gray-300 shadow-md transition-all duration-300"
+                    style={{
+                      left: `calc(${displayedSussLevel}% - 1px)`,
+                      transform: "translateX(-50%)",
+                    }}
+                  ></div>
+
+                  {/* Tick Marks */}
+                  <div className="absolute inset-0 flex justify-between px-1 items-center pointer-events-none">
+                    <div className="h-3 w-0.5 bg-gray-500"></div>
+                    <div className="h-2 w-0.5 bg-gray-500"></div>
+                    <div className="h-3 w-0.5 bg-gray-500"></div>
+                    <div className="h-2 w-0.5 bg-gray-500"></div>
+                    <div className="h-3 w-0.5 bg-gray-500"></div>
+                  </div>
+                </div>
 
                 {/* Digital Readout */}
-                <div className="absolute bottom-0 w-full text-center">
-                  <div className="inline-block bg-black border border-gray-700 px-3 py-1 rounded">
-                    <span className="text-sm text-gray-400">LEVEL: </span>
+                <div className="mt-3 w-full text-center">
+                  <div
+                    className={`inline-block bg-black border-2 px-4 py-2 rounded-lg transition-colors duration-300 ${
+                      displayedSussLevel < 30
+                        ? "border-red-700"
+                        : displayedSussLevel < 70
+                        ? "border-yellow-700"
+                        : "border-green-700"
+                    }`}
+                  >
+                    <span className="text-sm text-gray-400 mr-2">
+                      TRUST LEVEL:
+                    </span>
                     <span
-                      className={`font-mono font-bold ${
-                        sussLevel < 30
+                      className={`font-mono text-lg font-bold transition-colors duration-300 ${
+                        displayedSussLevel < 30
                           ? "text-red-500"
-                          : sussLevel < 70
+                          : displayedSussLevel < 70
                           ? "text-yellow-500"
                           : "text-green-500"
                       }`}
                     >
-                      {sussLevel}
+                      {Math.round(displayedSussLevel)}%
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            
-            {showEndGamePrompt && (
+
+            {/* Success notification will appear briefly before auto-ending the mission */}
+            {objectives.every((obj) => obj.completed) && !gameEnded && (
               <div className="mt-6 p-3 bg-blue-900 bg-opacity-50 border border-blue-700 rounded animate-pulse">
-                <p className="text-sm text-blue-300 mb-2">All objectives completed!</p>
-                <button 
-                  onClick={endGame}
-                  className="w-full bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                <p className="text-sm text-blue-300 mb-2">
+                  All objectives completed!
+                </p>
+                <p className="text-xs text-blue-200">Mission ending...</p>
+                <button
+                  onClick={() => {
+                    console.log("Manual check triggered");
+                    // Force game over directly
+                    setGameEnded(true);
+                    setGameOverReason("success");
+                    setShowGameOverPopup(true);
+                  }}
+                  className="w-full mt-2 bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                 >
-                  End Mission
+                  Complete Mission
                 </button>
               </div>
             )}
@@ -506,10 +746,86 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
         {/* Mission Footer */}
         <div className="text-xs text-gray-700 border-t border-gray-900 mt-4 pt-4">
-          <p>ENCRYPTION: ACTIVE | CONNECTION: SECURE | MISSION: {missionData?.mission_name || "LOADING..."}</p>
+          <p>
+            ENCRYPTION: ACTIVE | CONNECTION: SECURE | MISSION:{" "}
+            {missionData?.mission_name || "LOADING..."}
+          </p>
           <p>MI6 AGENT 007 | CLEARANCE LEVEL: 00</p>
         </div>
       </div>
+
+      {/* Game Over Popup */}
+      {showGameOverPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-red-800 rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              {/* Popup Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-red-600">
+                  {gameOverReason === "success"
+                    ? "MISSION COMPLETE"
+                    : "MISSION FAILED"}
+                </h2>
+              </div>
+
+              {/* Game Over Message */}
+              <div className="mb-8 text-center">
+                {gameOverReason === "success" ? (
+                  <>
+                    <div className="text-6xl text-green-500 mb-4">✓</div>
+                    <h3 className="text-xl text-green-400 mb-2">
+                      All objectives completed!
+                    </h3>
+                    <p className="text-gray-400">
+                      Excellent work, 007. You've successfully completed all
+                      mission objectives.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-6xl text-red-500 mb-4">✗</div>
+                    <h3 className="text-xl text-red-400 mb-2">
+                      Trust level critical!
+                    </h3>
+                    <p className="text-gray-400">
+                      Your cover has been blown. The target no longer trusts
+                      you.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* View Results Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    const score =
+                      gameOverReason === "success" ? calculateScore() : 0;
+                    const objectivesForUrl = encodeURIComponent(
+                      JSON.stringify(
+                        objectives.map((obj) => ({
+                          text: obj.text,
+                          completed: obj.completed,
+                        }))
+                      )
+                    );
+                    router.push(
+                      `/score?score=${score}&objectives=${objectivesForUrl}&reason=${gameOverReason}`
+                    );
+                  }}
+                  className={`px-8 py-3 rounded-lg font-bold ${
+                    gameOverReason === "success"
+                      ? "bg-green-700 hover:bg-green-600 text-white"
+                      : "bg-red-700 hover:bg-red-600 text-white"
+                  }`}
+                >
+                  View Mission Results
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Briefing Popup */}
       {showBriefing && missionData && (
@@ -518,63 +834,111 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="p-6">
               {/* Popup Header */}
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-red-600">MISSION BRIEFING: {missionData.mission_name}</h2>
-                <button 
+                <h2 className="text-xl font-bold text-red-600">
+                  MISSION BRIEFING: {missionData.mission_name}
+                </h2>
+                <button
                   onClick={() => setShowBriefing(false)}
                   className="text-gray-400 hover:text-white"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               {/* Target Info */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">TARGET: {missionData.target.name}</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  TARGET: {missionData.target.name}
+                </h3>
                 <div className="flex items-start">
                   <div className="mr-4">
-                    <Image
-                      src={missionData.target.img}
-                      alt={missionData.target.name}
-                      width={120}
-                      height={160}
-                      className="object-cover border border-gray-700"
-                    />
+                    <div className="w-[120px] h-[120px] rounded-full overflow-hidden border border-gray-700">
+                      <Image
+                        src={
+                          ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                            ? getDynamicImage(displayedSussLevel)
+                            : missionData.target.img
+                        }
+                        alt={missionData.target.name}
+                        width={120}
+                        height={120}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <p><span className="text-gray-500">Real Name:</span> {missionData.target.real_name}</p>
-                    <p><span className="text-gray-500">Nationality:</span> {missionData.target.nationality}</p>
-                    <p><span className="text-gray-500">Occupation:</span> {missionData.target.occupation}</p>
-                    <p><span className="text-gray-500">Features:</span> {missionData.target.features}</p>
-                    <p><span className="text-gray-500">Associates:</span> {missionData.target.associates.join(', ')}</p>
+                    <p>
+                      <span className="text-gray-500">Real Name:</span>{" "}
+                      {missionData.target.real_name}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Nationality:</span>{" "}
+                      {missionData.target.nationality}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Occupation:</span>{" "}
+                      {missionData.target.occupation}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Features:</span>{" "}
+                      {missionData.target.features}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Associates:</span>{" "}
+                      {missionData.target.associates.join(", ")}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Mission Objective */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">MISSION OBJECTIVE</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  MISSION OBJECTIVE
+                </h3>
                 <p className="text-gray-400">{missionData.objective}</p>
               </div>
-              
+
               {/* Intelligence */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">INTELLIGENCE</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  INTELLIGENCE
+                </h3>
                 <ul className="list-disc pl-5 space-y-1 text-gray-400">
                   {missionData.intelligence.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
-              
+
               {/* Objectives */}
               <div>
-                <h3 className="text-lg font-bold mb-3 text-gray-300">OBJECTIVES</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  OBJECTIVES
+                </h3>
                 <ul className="space-y-2">
                   {objectives.map((objective) => (
                     <li key={objective.id} className="flex items-start">
-                      <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                      <span
+                        className={
+                          objective.completed
+                            ? "text-green-500 mr-2"
+                            : "text-gray-600 mr-2"
+                        }
+                      >
                         {objective.completed ? "✓" : "○"}
                       </span>
                       <span className="text-gray-400">{objective.text}</span>
@@ -582,7 +946,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                   ))}
                 </ul>
               </div>
-              
+
               {/* Return Button */}
               <div className="mt-8 flex justify-center">
                 <button
