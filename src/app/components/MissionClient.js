@@ -73,38 +73,20 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
   
-  // Check for keywords in messages to update objectives
-  useEffect(() => {
-    // Only check the last message if it's from Le Chiffre
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage && lastMessage.sender === 'le-chiffre') {
-      const text = lastMessage.text.toLowerCase();
-      
-      // Check for financial information
-      if (text.includes('money') || text.includes('funds') || text.includes('financial') || 
-          text.includes('debt') || text.includes('investment') || text.includes('loss')) {
-        updateObjective(2);
-      }
-      
-      // Check for weaknesses
-      if (text.includes('asthma') || text.includes('inhaler') || text.includes('weakness') || 
-          text.includes('afraid') || text.includes('fear') || text.includes('desperate')) {
-        updateObjective(3);
-      }
-      
-      // Check for poker game invitation
-      if (text.includes('invite') || text.includes('poker') || text.includes('game') || 
-          text.includes('casino') || text.includes('play') || text.includes('table')) {
-        updateObjective(4);
-      }
-      
-      // Check if all objectives are completed
-      checkAllObjectivesCompleted();
-    }
-  }, [messages]);
+  // We no longer need to check for keywords in messages to update objectives
+  // Instead, we'll rely on the JSON response from the API
   
-  // Update an objective by ID
+  // Update an objective by numeric ID
   const updateObjective = (id) => {
+    setObjectives(prev => 
+      prev.map(obj => 
+        obj.id === id ? { ...obj, completed: true } : obj
+      )
+    );
+  };
+  
+  // Update an objective by string ID
+  const updateObjectiveById = (id) => {
     setObjectives(prev => 
       prev.map(obj => 
         obj.id === id ? { ...obj, completed: true } : obj
@@ -193,18 +175,78 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
       }
 
       const data = await response.json();
+      
+      // Parse the response - it might be a JSON string inside the message field
+      let parsedData = data;
+      let messageText = data.message;
+      
+      console.log("Original API response:", data);
+      
+      if (typeof data.message === 'string' && data.message.trim().startsWith('{')) {
+        try {
+          // Try to parse the message as JSON
+          const innerData = JSON.parse(data.message);
+          parsedData = innerData;
+          messageText = innerData.message;
+          console.log("Parsed inner JSON:", innerData);
+        } catch (e) {
+          console.error('Error parsing inner JSON:', e);
+        }
+      }
 
       // Update trust level if provided in the response
-      if (data.trust !== undefined) {
-        setSussLevel(data.trust);
+      if (parsedData.trust !== undefined) {
+        setSussLevel(parsedData.trust);
+      }
+      
+      // Update objectives based on the response
+      if (parsedData.objectives) {
+        // Handle nested objectives format
+        const objectivesData = parsedData.objectives;
+        
+        // Check each objective in the response
+        Object.keys(objectivesData).forEach(objectiveId => {
+          if (objectivesData[objectiveId] === 1) {
+            console.log(`Completing objective: ${objectiveId}`);
+            updateObjectiveById(objectiveId);
+          }
+        });
+      } else {
+        // Handle flat objectives format (backward compatibility)
+        if (missionId === '0_le_chiffre') {
+          // Check for poison objective
+          if (parsedData.poisonObjective === 1) {
+            updateObjectiveById('poisonObjective');
+          }
+          
+          // Check for location objective
+          if (parsedData.locationObjective === 1) {
+            updateObjectiveById('locationObjective');
+          }
+        } else if (missionId === '1_raoul_silva') {
+          // Check for location objective
+          if (parsedData.locationObjective === 1) {
+            updateObjectiveById('locationObjective');
+          }
+          
+          // Check for plan objective
+          if (parsedData.planObjective === 1) {
+            updateObjectiveById('planObjective');
+          }
+        }
       }
 
       // Add Le Chiffre's response
       const leChiffreResponse = {
         sender: 'le-chiffre',
-        text: data.message,
+        text: messageText || data.message,
         time: new Date().toLocaleTimeString()
       };
+      
+      // Check if all objectives are completed after updating
+      setTimeout(() => {
+        checkAllObjectivesCompleted();
+      }, 100);
       // Simulate typing delay for realism
       setTimeout(() => {
         setMessages(prev => [...prev, leChiffreResponse]);
