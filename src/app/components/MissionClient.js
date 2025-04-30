@@ -23,11 +23,11 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     }
     
     if (trustLevel <= 33) {
-      return "/images/le_chiffre/l_angry.png";
+      return "/images/l_angry.png";
     } else if (trustLevel <= 65) {
-      return "/images/le_chiffre/l_neutral.png";
+      return "/images/l_neutral.png";
     } else {
-      return "/images/le_chiffre/l_happy.png";
+      return "/images/l_happy.png";
     }
   };
   
