@@ -12,6 +12,9 @@ export default function ScorePage() {
   // Get score from URL parameters, default to 0 if not provided
   const score = parseInt(searchParams.get('score') || '0', 10);
   
+  // Get reason from URL parameters (success or trust_lost)
+  const reason = searchParams.get('reason') || 'success';
+  
   // Get objectives from URL parameters
   const objectivesParam = searchParams.get('objectives');
   let objectives = [];
@@ -39,5 +42,5 @@ export default function ScorePage() {
     ];
   }
   
-  return <ScoreScreen score={score} objectives={objectives} />;
+  return <ScoreScreen score={score} objectives={objectives} reason={reason} />;
 }

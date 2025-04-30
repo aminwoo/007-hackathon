@@ -5,17 +5,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import SoundControl from './SoundControl';
 
-export default function ScoreScreen({ score, objectives }) {
+export default function ScoreScreen({ score, objectives, reason = 'success' }) {
   const [showCertificate, setShowCertificate] = useState(false);
+  const isSuccess = reason === 'success';
   
-  // Animation effect for certificate
+  // Animation effect for certificate - only if mission was successful
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowCertificate(true);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        setShowCertificate(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
   
   // Calculate rating based on score
   const getRating = () => {

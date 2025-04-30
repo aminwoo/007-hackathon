@@ -11,8 +11,8 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [missionData, setMissionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
-  const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
-  const [displayedSussLevel, setDisplayedSussLevel] = useState(30); // For animation
+  const [sussLevel, setSussLevel] = useState(50); // Initial suspicion level (0-100)
+  const [displayedSussLevel, setDisplayedSussLevel] = useState(50); // For animation
   const messagesEndRef = useRef(null);
   
   // Load mission data
@@ -62,8 +62,9 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   
   // Game state
   const [gameEnded, setGameEnded] = useState(false);
-  const [showEndGamePrompt, setShowEndGamePrompt] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
+  const [showGameOverPopup, setShowGameOverPopup] = useState(false);
+  const [gameOverReason, setGameOverReason] = useState('success'); // 'success' or 'trust_lost'
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -99,6 +100,20 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
   }, [sussLevel, displayedSussLevel]);
+  
+  // Check if trust level drops to 0
+  useEffect(() => {
+    if (sussLevel === 0 && !gameEnded) {
+      // Set game as ended to prevent multiple calls
+      setGameEnded(true);
+      
+      // Show game over popup with failure reason
+      setGameOverReason('trust_lost');
+      setTimeout(() => {
+        setShowGameOverPopup(true);
+      }, 1000); // Small delay to allow animation to complete
+    }
+  }, [sussLevel, gameEnded]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -127,9 +142,31 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   
   // Check if all objectives are completed
   const checkAllObjectivesCompleted = () => {
+    console.log("Checking if all objectives are completed...");
+    console.log("Current objectives:", objectives);
+    
+    // Make sure we have objectives to check
+    if (objectives.length === 0) {
+      console.log("No objectives to check");
+      return;
+    }
+    
     const allCompleted = objectives.every(obj => obj.completed);
-    if (allCompleted && !gameEnded && !showEndGamePrompt) {
-      setShowEndGamePrompt(true);
+    console.log("All objectives completed?", allCompleted);
+    console.log("Game already ended?", gameEnded);
+    
+    if (allCompleted && !gameEnded) {
+      console.log("All objectives completed and game not ended yet. Ending game...");
+      
+      // Set game as ended to prevent multiple calls
+      setGameEnded(true);
+      
+      // Show game over popup with success reason
+      setGameOverReason('success');
+      setTimeout(() => {
+        console.log("Showing game over popup");
+        setShowGameOverPopup(true);
+      }, 1000); // Small delay to allow player to see all objectives completed
     }
   };
   
@@ -150,12 +187,14 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   };
   
   // End game and go to score screen
-  const endGame = () => {
-    const score = calculateScore();
+  const endGame = (success = true) => {
+    setGameEnded(true);
+    const score = success ? calculateScore() : 0;
     const objectivesForUrl = encodeURIComponent(JSON.stringify(
       objectives.map(obj => ({ text: obj.text, completed: obj.completed }))
     ));
-    router.push(`/score?score=${score}&objectives=${objectivesForUrl}`);
+    const reason = success ? 'success' : 'trust_lost';
+    router.push(`/score?score=${score}&objectives=${objectivesForUrl}&reason=${reason}`);
   };
 
   const handleSendMessage = async (e) => {
@@ -560,14 +599,22 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               </div>
             </div>
             
-            {showEndGamePrompt && (
+            {/* Success notification will appear briefly before auto-ending the mission */}
+            {objectives.every(obj => obj.completed) && !gameEnded && (
               <div className="mt-6 p-3 bg-blue-900 bg-opacity-50 border border-blue-700 rounded animate-pulse">
                 <p className="text-sm text-blue-300 mb-2">All objectives completed!</p>
+                <p className="text-xs text-blue-200">Mission ending...</p>
                 <button 
-                  onClick={endGame}
-                  className="w-full bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                  onClick={() => {
+                    console.log("Manual check triggered");
+                    // Force game over directly
+                    setGameEnded(true);
+                    setGameOverReason('success');
+                    setShowGameOverPopup(true);
+                  }}
+                  className="w-full mt-2 bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                 >
-                  End Mission
+                  Complete Mission
                 </button>
               </div>
             )}
@@ -580,6 +627,63 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           <p>MI6 AGENT 007 | CLEARANCE LEVEL: 00</p>
         </div>
       </div>
+
+      {/* Game Over Popup */}
+      {showGameOverPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-red-800 rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              {/* Popup Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-red-600">
+                  {gameOverReason === 'success' ? 'MISSION COMPLETE' : 'MISSION FAILED'}
+                </h2>
+              </div>
+              
+              {/* Game Over Message */}
+              <div className="mb-8 text-center">
+                {gameOverReason === 'success' ? (
+                  <>
+                    <div className="text-6xl text-green-500 mb-4">✓</div>
+                    <h3 className="text-xl text-green-400 mb-2">All objectives completed!</h3>
+                    <p className="text-gray-400">
+                      Excellent work, 007. You've successfully completed all mission objectives.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-6xl text-red-500 mb-4">✗</div>
+                    <h3 className="text-xl text-red-400 mb-2">Trust level critical!</h3>
+                    <p className="text-gray-400">
+                      Your cover has been blown. The target no longer trusts you.
+                    </p>
+                  </>
+                )}
+              </div>
+              
+              {/* View Results Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    const score = gameOverReason === 'success' ? calculateScore() : 0;
+                    const objectivesForUrl = encodeURIComponent(JSON.stringify(
+                      objectives.map(obj => ({ text: obj.text, completed: obj.completed }))
+                    ));
+                    router.push(`/score?score=${score}&objectives=${objectivesForUrl}&reason=${gameOverReason}`);
+                  }}
+                  className={`px-8 py-3 rounded-lg font-bold ${
+                    gameOverReason === 'success' 
+                      ? "bg-green-700 hover:bg-green-600 text-white" 
+                      : "bg-red-700 hover:bg-red-600 text-white"
+                  }`}
+                >
+                  View Mission Results
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Briefing Popup */}
       {showBriefing && missionData && (
