@@ -124,7 +124,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
-  }, [sussLevel, displayedSussLevel]);
+  }, [sussLevel, displayedSussLevel, getLeChiffreImage]);
   
   // Check if trust level drops to 0
   useEffect(() => {
@@ -284,10 +284,63 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           let jsonString = data.message;
           
           // Replace single quotes with double quotes for JSON compatibility
-          // This regex handles replacing single quotes that are used as JSON quotes
-          // but preserves single quotes within text strings
-          jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3') // Replace property names
-                               .replace(/:\s*\'([^},]+)\'/g, ': "$1"'); // Replace property values
+          // First, try to parse it directly in case it's already valid JSON
+          try {
+            JSON.parse(jsonString);
+            // If we get here, the JSON is already valid, no need to replace quotes
+          } catch (e) {
+            console.log("JSON parsing failed, attempting to fix quotes...");
+            
+            // More comprehensive approach to handle single quotes in JSON
+            // Step 1: Replace property names with single quotes
+            jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3');
+            
+            // Step 2: Replace property values with single quotes
+            // This is more complex as we need to handle nested objects and arrays
+            let inString = false;
+            let inSingleQuoteString = false;
+            let escaped = false;
+            let result = '';
+            
+            for (let i = 0; i < jsonString.length; i++) {
+              const char = jsonString[i];
+              const nextChar = i < jsonString.length - 1 ? jsonString[i + 1] : '';
+              
+              // Handle escape sequences
+              if (char === '\\' && !escaped) {
+                escaped = true;
+                result += char;
+                continue;
+              }
+              
+              // Handle string boundaries
+              if (char === '"' && !escaped) {
+                inString = !inString;
+              } else if (char === "'" && !escaped && !inString) {
+                inSingleQuoteString = !inSingleQuoteString;
+                // Replace single quote with double quote
+                result += '"';
+                continue;
+              }
+              
+              // Add character to result
+              if (!inSingleQuoteString) {
+                result += char;
+              } else {
+                // Inside a single-quoted string, escape any double quotes
+                if (char === '"') {
+                  result += '\\' + char;
+                } else {
+                  result += char;
+                }
+              }
+              
+              escaped = false;
+            }
+            
+            jsonString = result;
+            console.log("Fixed JSON string:", jsonString);
+          }
           
           const innerData = JSON.parse(jsonString);
           parsedData = innerData;

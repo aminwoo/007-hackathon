@@ -35,7 +35,7 @@ export async function POST(request) {
       // model: 'gpt-3.5-turbo',
       model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       messages: conversationWithSystem,
-      max_tokens: 100,
+      max_tokens: 500, // Increased max_tokens to ensure we get the complete JSON response
       temperature: 0.7,
       // stream: false
     });
@@ -48,33 +48,26 @@ export async function POST(request) {
     console.log(responseData)
     
     try {
-      // Try to parse the AI response as JSON to extract trust value and objectives
-      let parsedContent;
-      const content = completion.choices[0].message.content;
+      // Get the raw content from the API response
+      const rawContent = completion.choices[0].message.content;
+      console.log('Raw API response:', rawContent);
       
-      try {
-        // First attempt: try parsing as is (assuming proper JSON with double quotes)
-        parsedContent = JSON.parse(content);
-      } catch (initialParseError) {
-        // Second attempt: try to handle single quotes by converting to valid JSON
-        // This regex replaces single quotes with double quotes, but only for object keys and string values
-        // It's a simplified approach that handles most common cases
-        const fixedContent = content
-          // Replace single-quoted keys with double-quoted keys
-          .replace(/'([^']+)'(\s*:)/g, '"$1"$2')
-          // Replace single-quoted values with double-quoted values
-          .replace(/:\s*'([^']*)'/g, ': "$1"');
-          
-        try {
-          parsedContent = JSON.parse(fixedContent);
-          console.log('Parsed JSON after fixing single quotes');
-        } catch (secondParseError) {
-          // If both attempts fail, throw the original error
-          console.error('Failed to parse JSON even after fixing quotes:', secondParseError);
-          throw initialParseError;
+      // Try to fix common JSON formatting issues
+      let jsonString = rawContent;
+      
+      // Check if the response is a JSON string
+      if (jsonString.trim().startsWith('{') && !jsonString.trim().endsWith('}')) {
+        console.log('JSON appears to be incomplete, attempting to fix...');
+        // Try to find the last complete JSON object by finding the last closing brace
+        const lastBraceIndex = jsonString.lastIndexOf('}');
+        if (lastBraceIndex > 0) {
+          jsonString = jsonString.substring(0, lastBraceIndex + 1);
+          console.log('Truncated JSON to:', jsonString);
         }
       }
       
+      // Try to parse the AI response as JSON to extract trust value and objectives
+      const parsedContent = JSON.parse(jsonString);
       if (parsedContent && typeof parsedContent.message === 'string') {
         // Start with the basic response data
         responseData = {
