@@ -85,7 +85,7 @@ export default function BriefingClient() {
         <div className="mb-8 bg-gray-900 p-6 border-l-4 border-red-600">
           <h3 className="text-xl font-bold mb-4 text-gray-100">MISSION OBJECTIVE</h3>
           <p className="mb-4">
-            Le Chiffre has recently lost a significant sum of his clients' money in a failed stock market venture. 
+            Le Chiffre has recently lost a significant sum of his clients money in a failed stock market venture. 
             Intelligence suggests he is planning to recoup these losses through a high-stakes poker game at Casino Royale in Montenegro.
           </p>
           <p className="mb-4">
@@ -114,12 +114,20 @@ export default function BriefingClient() {
           <p className="text-sm text-gray-500">
             This document will self-destruct in <span className="countdown text-red-500 font-bold"></span> seconds
           </p>
-          <Link 
-            href="/"
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            Return to HQ
-          </Link>
+          <div className="flex gap-4">
+            <Link 
+              href="/"
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors"
+            >
+              Return to HQ
+            </Link>
+            <Link 
+              href="/mission"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              Begin Mission
+            </Link>
+          </div>
         </div>
       </div>
     </>

@@ -30,14 +30,6 @@ export default function AudioPlayer() {
         createTypingEffect(context, 700, 2.5); // boot-text-4
         createTypingEffect(context, 700, 3.3); // boot-text-5
         createTypingEffect(context, 700, 4.1); // boot-text-6
-
-        // Message typing sounds (after a delay)
-        setTimeout(() => {
-          createTypingEffect(context, 800, 0); // typewriter-1
-          createTypingEffect(context, 1200, 0.9); // typewriter-2
-          createTypingEffect(context, 1000, 2.2); // typewriter-3
-          createTypingEffect(context, 500, 3.3); // typewriter-4
-        }, 4800);
       }, 300);
     };
 
