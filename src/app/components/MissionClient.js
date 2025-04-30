@@ -11,7 +11,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [missionData, setMissionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
-  const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
+  const [sussLevel, setSussLevel] = useState(0); // Initial suspicion level (0-100)
   const messagesEndRef = useRef(null);
   
   // Load mission data
