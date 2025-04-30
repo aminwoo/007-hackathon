@@ -35,7 +35,7 @@ export async function POST(request) {
       // model: 'gpt-3.5-turbo',
       model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       messages: conversationWithSystem,
-      max_tokens: 100,
+      max_tokens: 500, // Increased max_tokens to ensure we get the complete JSON response
       temperature: 0.7,
       // stream: false
     });
@@ -48,8 +48,26 @@ export async function POST(request) {
     console.log(responseData)
     
     try {
+      // Get the raw content from the API response
+      const rawContent = completion.choices[0].message.content;
+      console.log('Raw API response:', rawContent);
+      
+      // Try to fix common JSON formatting issues
+      let jsonString = rawContent;
+      
+      // Check if the response is a JSON string
+      if (jsonString.trim().startsWith('{') && !jsonString.trim().endsWith('}')) {
+        console.log('JSON appears to be incomplete, attempting to fix...');
+        // Try to find the last complete JSON object by finding the last closing brace
+        const lastBraceIndex = jsonString.lastIndexOf('}');
+        if (lastBraceIndex > 0) {
+          jsonString = jsonString.substring(0, lastBraceIndex + 1);
+          console.log('Truncated JSON to:', jsonString);
+        }
+      }
+      
       // Try to parse the AI response as JSON to extract trust value and objectives
-      const parsedContent = JSON.parse(completion.choices[0].message.content);
+      const parsedContent = JSON.parse(jsonString);
       if (parsedContent && typeof parsedContent.message === 'string') {
         // Start with the basic response data
         responseData = {

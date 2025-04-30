@@ -276,10 +276,63 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           let jsonString = data.message;
           
           // Replace single quotes with double quotes for JSON compatibility
-          // This regex handles replacing single quotes that are used as JSON quotes
-          // but preserves single quotes within text strings
-          jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3') // Replace property names
-                               .replace(/:\s*\'([^},]+)\'/g, ': "$1"'); // Replace property values
+          // First, try to parse it directly in case it's already valid JSON
+          try {
+            JSON.parse(jsonString);
+            // If we get here, the JSON is already valid, no need to replace quotes
+          } catch (e) {
+            console.log("JSON parsing failed, attempting to fix quotes...");
+            
+            // More comprehensive approach to handle single quotes in JSON
+            // Step 1: Replace property names with single quotes
+            jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3');
+            
+            // Step 2: Replace property values with single quotes
+            // This is more complex as we need to handle nested objects and arrays
+            let inString = false;
+            let inSingleQuoteString = false;
+            let escaped = false;
+            let result = '';
+            
+            for (let i = 0; i < jsonString.length; i++) {
+              const char = jsonString[i];
+              const nextChar = i < jsonString.length - 1 ? jsonString[i + 1] : '';
+              
+              // Handle escape sequences
+              if (char === '\\' && !escaped) {
+                escaped = true;
+                result += char;
+                continue;
+              }
+              
+              // Handle string boundaries
+              if (char === '"' && !escaped) {
+                inString = !inString;
+              } else if (char === "'" && !escaped && !inString) {
+                inSingleQuoteString = !inSingleQuoteString;
+                // Replace single quote with double quote
+                result += '"';
+                continue;
+              }
+              
+              // Add character to result
+              if (!inSingleQuoteString) {
+                result += char;
+              } else {
+                // Inside a single-quoted string, escape any double quotes
+                if (char === '"') {
+                  result += '\\' + char;
+                } else {
+                  result += char;
+                }
+              }
+              
+              escaped = false;
+            }
+            
+            jsonString = result;
+            console.log("Fixed JSON string:", jsonString);
+          }
           
           const innerData = JSON.parse(jsonString);
           parsedData = innerData;
@@ -409,13 +462,15 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="p-4 border-b border-gray-800 bg-black">
               <div className="flex items-center">
                 <div className="w-10 h-10 relative mr-3">
-                  <Image
-                    src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
-                    alt={missionData?.target.name || "Target"}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
+                  <div className="w-10 h-10 overflow-hidden rounded-full">
+                    <Image
+                      src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
+                      alt={missionData?.target.name || "Target"}
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
                 </div>
                 <div>
@@ -499,13 +554,15 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
-                <Image
-                  src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
-                  alt={missionData?.target.name || "Target"}
-                  width={50}
-                  height={50}
-                  className="rounded-full object-cover mr-2"
-                />
+                <div className="w-12 h-12 overflow-hidden rounded-full mr-2 border border-gray-700">
+                  <Image
+                    src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
+                    alt={missionData?.target.name || "Target"}
+                    width={48}
+                    height={48}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
                 <div>
                   <p className="text-gray-300">{missionData?.target.name || "Target"}</p>
                   <p className="text-xs text-gray-500">{missionData?.target.occupation || "Unknown"}</p>
@@ -670,7 +727,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     <div className="text-6xl text-green-500 mb-4">✓</div>
                     <h3 className="text-xl text-green-400 mb-2">All objectives completed!</h3>
                     <p className="text-gray-400">
-                      Excellent work, 007. You&apos;ve successfully completed all mission objectives.
+                      Excellent work, 007. You&#39;ve successfully completed all mission objectives.
                     </p>
                   </>
                 ) : (
@@ -731,13 +788,15 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                 <h3 className="text-lg font-bold mb-3 text-gray-300">TARGET: {missionData.target.name}</h3>
                 <div className="flex items-start">
                   <div className="mr-4">
-                    <Image
-                      src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : missionData.target.img}
-                      alt={missionData.target.name}
-                      width={120}
-                      height={160}
-                      className="object-cover border border-gray-700"
-                    />
+                    <div className="w-32 h-32 overflow-hidden rounded-full border border-gray-700">
+                      <Image
+                        src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : missionData.target.img}
+                        alt={missionData.target.name}
+                        width={128}
+                        height={128}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <p><span className="text-gray-500">Real Name:</span> {missionData.target.real_name}</p>

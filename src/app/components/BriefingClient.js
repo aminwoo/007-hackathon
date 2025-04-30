@@ -150,7 +150,7 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
             <div className="space-y-4">
               <div>
                 <h4 className="text-gray-400 text-sm">COVER STORY:</h4>
-                <p className="text-blue-100">You are posing as one of {missionData.target.name}&apos;s trusted henchmen. Use this identity to gain information about the target&apos;s plans.</p>
+                <p className="text-blue-100">You are posing as one of {missionData.target.name}&#39;s trusted henchmen. Use this identity to gain information about the target&#39;s plans.</p>
               </div>
               
               <div>
