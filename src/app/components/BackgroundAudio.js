@@ -9,7 +9,6 @@ export default function BackgroundAudio() {
   const [volume, setVolume] = useState(30);
   const [autoplayAttempted, setAutoplayAttempted] = useState(false);
 
-
   // Function to manually play audio
   const playAudio = () => {
     if (audioRef.current && !isPlaying) {
@@ -57,12 +56,21 @@ export default function BackgroundAudio() {
     }
   }, []);
 
+  // Combined toggle mute function that handles both background audio and all other audio elements
   const toggleMute = () => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    
+    // Mute/unmute the background audio
     if (audioRef.current) {
-      const newMutedState = !isMuted;
       audioRef.current.muted = newMutedState;
-      setIsMuted(newMutedState);
     }
+    
+    // Find all other audio elements and mute/unmute them
+    const audioElements = document.querySelectorAll('audio');
+    audioElements.forEach(audio => {
+      audio.muted = newMutedState;
+    });
   };
 
   const handleVolumeChange = (e) => {
@@ -98,13 +106,29 @@ export default function BackgroundAudio() {
             ▶️ Play Music
           </button>
         )}
-        {/* Mute/Unmute button */}
+        
+        {/* Mute/Unmute button - now controls all audio */}
         <button 
           onClick={toggleMute} 
-          className="hover:text-green-300 transition-colors text-sm flex items-center justify-center"
-          aria-label={isMuted ? "Unmute background music" : "Mute background music"}
+          className="hover:text-green-300 transition-colors flex items-center justify-center"
+          aria-label={isMuted ? "Unmute all audio" : "Mute all audio"}
         >
-          {isMuted ? "🔇 Unmute" : "🔊 Mute"}
+          {isMuted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          )}
         </button>
         
         {/* Volume slider */}

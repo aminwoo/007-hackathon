@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import SoundControl from './SoundControl';
 
 // Import AudioPlayer with dynamic import
 const AudioPlayer = dynamic(() => import('./AudioPlayer'), { ssr: false });
@@ -12,7 +11,6 @@ export default function HomeClient() {
   return (
     <>
       <AudioPlayer />
-      <SoundControl />
       <div className="max-w-4xl mx-auto">
         {/* Terminal Header */}
         <div className="border-b border-green-700 mb-8 pb-4 fade-in header-fade-in">
