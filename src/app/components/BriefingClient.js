@@ -87,7 +87,7 @@ export default function BriefingClient() {
         <div className="mb-8 bg-gray-900 p-6 border-l-4 border-red-600">
           <h3 className="text-xl font-bold mb-4 text-gray-100">MISSION OBJECTIVE</h3>
           <p className="mb-4">
-            Le Chiffre has recently lost a significant sum of his clients' money in a failed stock market venture. 
+            Le Chiffre has recently lost a significant sum of his clients money in a failed stock market venture. 
             Intelligence suggests he is planning to recoup these losses through a high-stakes poker game at Casino Royale in Montenegro.
           </p>
           <p className="mb-4">
