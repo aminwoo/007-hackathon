@@ -84,7 +84,7 @@ export default function BackgroundAudio() {
 
   return (
     <>
-      <audio ref={audioRef} src="/spy_loop.wav" preload="auto" />
+      <audio ref={audioRef} src="/sounds/spy_loop.wav" preload="auto" />
       
       {/* Audio controls panel */}
       <div className="fixed bottom-4 right-4 z-50 bg-black bg-opacity-70 p-3 rounded-md border border-green-700 text-green-500 font-mono flex items-center space-x-3">
