@@ -32,6 +32,7 @@ export async function POST(request) {
       role: 'user',
       content: JSON.stringify({
         target: missionData.target,
+        targetInstructions: missionData.targetInstructions,
         objective: missionData.objective,
         objectives: missionData.objectives,
         intelligence: missionData.intelligence,
