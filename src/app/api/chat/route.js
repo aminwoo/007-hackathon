@@ -3,7 +3,8 @@ import OpenAI from 'openai';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: 'skyfall123',
+  baseURL: 'http://bedroc-proxy-0bdw9vltembu-277443603.us-west-2.elb.amazonaws.com/api/v1', 
 });
 
 export async function POST(request) {
@@ -29,13 +30,18 @@ export async function POST(request) {
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      // model: 'gpt-3.5-turbo',
+      model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       messages: conversationWithSystem,
       max_tokens: 100,
       temperature: 0.7,
+      // stream: false
     });
 
     // Return the response
+    // return {
+    //   message: completion.choices[0].message.content
+    // }
     return NextResponse.json({
       message: completion.choices[0].message.content,
     });
