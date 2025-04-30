@@ -124,7 +124,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
-  }, [sussLevel, displayedSussLevel, getLeChiffreImage]);
+  }, [sussLevel, displayedSussLevel]);
   
   // Check if trust level drops to 0
   useEffect(() => {
