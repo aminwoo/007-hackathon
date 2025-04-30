@@ -15,20 +15,29 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [displayedSussLevel, setDisplayedSussLevel] = useState(50); // For animation
   const messagesEndRef = useRef(null);
   
-  // Function to get Le Chiffre's image based on trust level
-  const getLeChiffreImage = (trustLevel) => {
-    // Only apply dynamic images for Le Chiffre mission
-    if (missionId !== '0_le_chiffre') {
-      return missionData?.target.img;
+  // Function to get dynamic image based on trust level
+  const getDynamicImage = (trustLevel) => {
+    // Apply dynamic images based on mission
+    if (missionId === '0_le_chiffre') {
+      if (trustLevel <= 33) {
+        return "/images/l_angry.png";
+      } else if (trustLevel <= 65) {
+        return "/images/l_neutral.png";
+      } else {
+        return "/images/l_happy.png";
+      }
+    } else if (missionId === '1_raoul_silva') {
+      if (trustLevel <= 33) {
+        return "/images/r_angry.png";
+      } else if (trustLevel <= 65) {
+        return "/images/r_neutral.png";
+      } else {
+        return "/images/r_happy.png";
+      }
     }
     
-    if (trustLevel <= 33) {
-      return "/images/l_angry.png";
-    } else if (trustLevel <= 65) {
-      return "/images/l_neutral.png";
-    } else {
-      return "/images/l_happy.png";
-    }
+    // Default to the static image from mission data
+    return missionData?.target.img;
   };
   
   // Load mission data
@@ -113,10 +122,9 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     // Set up interval for animation
     const animationInterval = setInterval(animate, animationSpeed);
     
-    getLeChiffreImage(displayedSussLevel);
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
-  }, [sussLevel, displayedSussLevel, getLeChiffreImage]);
+  }, [sussLevel, displayedSussLevel]);
   
   // Check if trust level drops to 0
   useEffect(() => {
@@ -462,9 +470,14 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="p-4 border-b border-gray-800 bg-black">
               <div className="flex items-center">
                 <div className="w-10 h-10 relative mr-3">
-                  <div className="w-10 h-10 overflow-hidden rounded-full">
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
                     <Image
-                      src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
+                      src={
+                        ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                          ? getDynamicImage(displayedSussLevel)
+                          : missionData?.target.img ||
+                            "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
+                      }
                       alt={missionData?.target.name || "Target"}
                       width={40}
                       height={40}
@@ -474,7 +487,9 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-300">{missionData?.target.name || "Target"}</p>
+                  <p className="font-bold text-gray-300">
+                    {missionData?.target.name || "Target"}
+                  </p>
                   <p className="text-xs text-gray-500">Online</p>
                 </div>
               </div>
@@ -554,18 +569,27 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
-                <div className="w-12 h-12 overflow-hidden rounded-full mr-2 border border-gray-700">
+                <div className="w-[50px] h-[50px] rounded-full overflow-hidden mr-2">
                   <Image
-                    src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
+                    src={
+                      ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                        ? getDynamicImage(displayedSussLevel)
+                        : missionData?.target.img ||
+                          "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"
+                    }
                     alt={missionData?.target.name || "Target"}
-                    width={48}
-                    height={48}
+                    width={50}
+                    height={50}
                     className="object-cover w-full h-full"
                   />
                 </div>
                 <div>
-                  <p className="text-gray-300">{missionData?.target.name || "Target"}</p>
-                  <p className="text-xs text-gray-500">{missionData?.target.occupation || "Unknown"}</p>
+                  <p className="text-gray-300">
+                    {missionData?.target.name || "Target"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {missionData?.target.occupation || "Unknown"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -577,7 +601,13 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               <ul className="text-sm text-gray-400 space-y-2">
                 {objectives.map((objective) => (
                   <li key={objective.id} className="flex items-start">
-                    <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                    <span
+                      className={
+                        objective.completed
+                          ? "text-green-500 mr-2"
+                          : "text-gray-600 mr-2"
+                      }
+                    >
                       {objective.completed ? "✓" : "○"}
                     </span>
                     <span>{objective.text}</span>
@@ -598,49 +628,66 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
             {/* Trust Meter */}
             <div className="mb-4">
-              <h3 className="text-sm font-bold text-gray-400 mb-3">TRUST METER</h3>
+              <h3 className="text-sm font-bold text-gray-400 mb-3">
+                TRUST METER
+              </h3>
               <div className="relative w-full flex flex-col items-center">
                 {/* Trust Level Labels */}
                 <div className="w-full flex justify-between mb-1">
                   <span className="text-xs text-red-500 font-bold">LOW</span>
-                  <span className="text-xs text-yellow-500 font-bold">MEDIUM</span>
+                  <span className="text-xs text-yellow-500 font-bold">
+                    MEDIUM
+                  </span>
                   <span className="text-xs text-green-500 font-bold">HIGH</span>
                 </div>
-                
+
                 {/* Slider with Gradient Background */}
                 <div className="w-full h-8 relative rounded-md overflow-hidden">
                   {/* Gradient Background */}
-                  <div 
-                    className="absolute inset-0" 
+                  <div
+                    className="absolute inset-0"
                     style={{
-                      background: 'linear-gradient(to right, #d10000, #dbd000, #1faa00)'
+                      background:
+                        "linear-gradient(to right, #d10000, #dbd000, #1faa00)",
                     }}
                   ></div>
-                  
+
                   {/* Slider Track (Dark Overlay) */}
                   <div className="absolute inset-0 bg-black bg-opacity-70"></div>
-                  
+
                   {/* Slider Fill based on Trust Level */}
-                  <div 
+                  <div
                     className="absolute top-0 bottom-0 left-0 h-full transition-all duration-300"
                     style={{
                       width: `${displayedSussLevel}%`,
                       background: `linear-gradient(to right, 
-                        ${displayedSussLevel < 30 ? '#d10000' : '#d10000'}, 
-                        ${displayedSussLevel < 70 ? (displayedSussLevel < 30 ? '#d10000' : '#dbd000') : '#dbd000'}, 
-                        ${displayedSussLevel >= 70 ? '#1faa00' : (displayedSussLevel >= 30 ? '#dbd000' : '#d10000')})`
+                        ${displayedSussLevel < 30 ? "#d10000" : "#d10000"}, 
+                        ${
+                          displayedSussLevel < 70
+                            ? displayedSussLevel < 30
+                              ? "#d10000"
+                              : "#dbd000"
+                            : "#dbd000"
+                        }, 
+                        ${
+                          displayedSussLevel >= 70
+                            ? "#1faa00"
+                            : displayedSussLevel >= 30
+                            ? "#dbd000"
+                            : "#d10000"
+                        })`,
                     }}
                   ></div>
-                  
+
                   {/* Slider Thumb */}
-                  <div 
+                  <div
                     className="absolute top-0 bottom-0 w-2 bg-white border border-gray-300 shadow-md transition-all duration-300"
                     style={{
                       left: `calc(${displayedSussLevel}% - 1px)`,
-                      transform: 'translateX(-50%)'
+                      transform: "translateX(-50%)",
                     }}
                   ></div>
-                  
+
                   {/* Tick Marks */}
                   <div className="absolute inset-0 flex justify-between px-1 items-center pointer-events-none">
                     <div className="h-3 w-0.5 bg-gray-500"></div>
@@ -653,7 +700,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
                 {/* Digital Readout */}
                 <div className="mt-3 w-full text-center">
-                  <div 
+                  <div
                     className={`inline-block bg-black border-2 px-4 py-2 rounded-lg transition-colors duration-300 ${
                       displayedSussLevel < 30
                         ? "border-red-700"
@@ -662,7 +709,9 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                         : "border-green-700"
                     }`}
                   >
-                    <span className="text-sm text-gray-400 mr-2">TRUST LEVEL:</span>
+                    <span className="text-sm text-gray-400 mr-2">
+                      TRUST LEVEL:
+                    </span>
                     <span
                       className={`font-mono text-lg font-bold transition-colors duration-300 ${
                         displayedSussLevel < 30
@@ -678,18 +727,20 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                 </div>
               </div>
             </div>
-            
+
             {/* Success notification will appear briefly before auto-ending the mission */}
-            {objectives.every(obj => obj.completed) && !gameEnded && (
+            {objectives.every((obj) => obj.completed) && !gameEnded && (
               <div className="mt-6 p-3 bg-blue-900 bg-opacity-50 border border-blue-700 rounded animate-pulse">
-                <p className="text-sm text-blue-300 mb-2">All objectives completed!</p>
+                <p className="text-sm text-blue-300 mb-2">
+                  All objectives completed!
+                </p>
                 <p className="text-xs text-blue-200">Mission ending...</p>
-                <button 
+                <button
                   onClick={() => {
                     console.log("Manual check triggered");
                     // Force game over directly
                     setGameEnded(true);
-                    setGameOverReason('success');
+                    setGameOverReason("success");
                     setShowGameOverPopup(true);
                   }}
                   className="w-full mt-2 bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
@@ -703,7 +754,10 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
         {/* Mission Footer */}
         <div className="text-xs text-gray-700 border-t border-gray-900 mt-4 pt-4">
-          <p>ENCRYPTION: ACTIVE | CONNECTION: SECURE | MISSION: {missionData?.mission_name || "LOADING..."}</p>
+          <p>
+            ENCRYPTION: ACTIVE | CONNECTION: SECURE | MISSION:{" "}
+            {missionData?.mission_name || "LOADING..."}
+          </p>
           <p>MI6 AGENT 007 | CLEARANCE LEVEL: 00</p>
         </div>
       </div>
@@ -716,44 +770,60 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               {/* Popup Header */}
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-red-600">
-                  {gameOverReason === 'success' ? 'MISSION COMPLETE' : 'MISSION FAILED'}
+                  {gameOverReason === "success"
+                    ? "MISSION COMPLETE"
+                    : "MISSION FAILED"}
                 </h2>
               </div>
-              
+
               {/* Game Over Message */}
               <div className="mb-8 text-center">
-                {gameOverReason === 'success' ? (
+                {gameOverReason === "success" ? (
                   <>
                     <div className="text-6xl text-green-500 mb-4">✓</div>
-                    <h3 className="text-xl text-green-400 mb-2">All objectives completed!</h3>
+                    <h3 className="text-xl text-green-400 mb-2">
+                      All objectives completed!
+                    </h3>
                     <p className="text-gray-400">
-                      Excellent work, 007. You&#39;ve successfully completed all mission objectives.
+                      Excellent work, 007. You've successfully completed all
+                      mission objectives.
                     </p>
                   </>
                 ) : (
                   <>
                     <div className="text-6xl text-red-500 mb-4">✗</div>
-                    <h3 className="text-xl text-red-400 mb-2">Trust level critical!</h3>
+                    <h3 className="text-xl text-red-400 mb-2">
+                      Trust level critical!
+                    </h3>
                     <p className="text-gray-400">
-                      Your cover has been blown. The target no longer trusts you.
+                      Your cover has been blown. The target no longer trusts
+                      you.
                     </p>
                   </>
                 )}
               </div>
-              
+
               {/* View Results Button */}
               <div className="flex justify-center">
                 <button
                   onClick={() => {
-                    const score = gameOverReason === 'success' ? calculateScore() : 0;
-                    const objectivesForUrl = encodeURIComponent(JSON.stringify(
-                      objectives.map(obj => ({ text: obj.text, completed: obj.completed }))
-                    ));
-                    router.push(`/score?score=${score}&objectives=${objectivesForUrl}&reason=${gameOverReason}`);
+                    const score =
+                      gameOverReason === "success" ? calculateScore() : 0;
+                    const objectivesForUrl = encodeURIComponent(
+                      JSON.stringify(
+                        objectives.map((obj) => ({
+                          text: obj.text,
+                          completed: obj.completed,
+                        }))
+                      )
+                    );
+                    router.push(
+                      `/score?score=${score}&objectives=${objectivesForUrl}&reason=${gameOverReason}`
+                    );
                   }}
                   className={`px-8 py-3 rounded-lg font-bold ${
-                    gameOverReason === 'success' 
-                      ? "bg-green-700 hover:bg-green-600 text-white" 
+                    gameOverReason === "success"
+                      ? "bg-green-700 hover:bg-green-600 text-white"
                       : "bg-red-700 hover:bg-red-600 text-white"
                   }`}
                 >
@@ -772,65 +842,111 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             <div className="p-6">
               {/* Popup Header */}
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-red-600">MISSION BRIEFING: {missionData.mission_name}</h2>
-                <button 
+                <h2 className="text-xl font-bold text-red-600">
+                  MISSION BRIEFING: {missionData.mission_name}
+                </h2>
+                <button
                   onClick={() => setShowBriefing(false)}
                   className="text-gray-400 hover:text-white"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               {/* Target Info */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">TARGET: {missionData.target.name}</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  TARGET: {missionData.target.name}
+                </h3>
                 <div className="flex items-start">
                   <div className="mr-4">
-                    <div className="w-32 h-32 overflow-hidden rounded-full border border-gray-700">
+                    <div className="w-[120px] h-[120px] rounded-full overflow-hidden border border-gray-700">
                       <Image
-                        src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : missionData.target.img}
+                        src={
+                          ["0_le_chiffre", "1_raoul_silva"].includes(missionId)
+                            ? getDynamicImage(displayedSussLevel)
+                            : missionData.target.img
+                        }
                         alt={missionData.target.name}
-                        width={128}
-                        height={128}
+                        width={120}
+                        height={120}
                         className="object-cover w-full h-full"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <p><span className="text-gray-500">Real Name:</span> {missionData.target.real_name}</p>
-                    <p><span className="text-gray-500">Nationality:</span> {missionData.target.nationality}</p>
-                    <p><span className="text-gray-500">Occupation:</span> {missionData.target.occupation}</p>
-                    <p><span className="text-gray-500">Features:</span> {missionData.target.features}</p>
-                    <p><span className="text-gray-500">Associates:</span> {missionData.target.associates.join(', ')}</p>
+                    <p>
+                      <span className="text-gray-500">Real Name:</span>{" "}
+                      {missionData.target.real_name}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Nationality:</span>{" "}
+                      {missionData.target.nationality}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Occupation:</span>{" "}
+                      {missionData.target.occupation}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Features:</span>{" "}
+                      {missionData.target.features}
+                    </p>
+                    <p>
+                      <span className="text-gray-500">Associates:</span>{" "}
+                      {missionData.target.associates.join(", ")}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Mission Objective */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">MISSION OBJECTIVE</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  MISSION OBJECTIVE
+                </h3>
                 <p className="text-gray-400">{missionData.objective}</p>
               </div>
-              
+
               {/* Intelligence */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-3 text-gray-300">INTELLIGENCE</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  INTELLIGENCE
+                </h3>
                 <ul className="list-disc pl-5 space-y-1 text-gray-400">
                   {missionData.intelligence.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
-              
+
               {/* Objectives */}
               <div>
-                <h3 className="text-lg font-bold mb-3 text-gray-300">OBJECTIVES</h3>
+                <h3 className="text-lg font-bold mb-3 text-gray-300">
+                  OBJECTIVES
+                </h3>
                 <ul className="space-y-2">
                   {objectives.map((objective) => (
                     <li key={objective.id} className="flex items-start">
-                      <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                      <span
+                        className={
+                          objective.completed
+                            ? "text-green-500 mr-2"
+                            : "text-gray-600 mr-2"
+                        }
+                      >
                         {objective.completed ? "✓" : "○"}
                       </span>
                       <span className="text-gray-400">{objective.text}</span>
@@ -838,7 +954,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                   ))}
                 </ul>
               </div>
-              
+
               {/* Return Button */}
               <div className="mt-8 flex justify-center">
                 <button
