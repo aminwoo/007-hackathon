@@ -276,7 +276,13 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
 
       // Update trust level if provided in the response
       if (parsedData.trust !== undefined) {
-        setSussLevel(parsedData.trust);
+        // Handle trust as a delta (change) rather than an absolute value
+        setSussLevel(prevLevel => {
+          // Calculate new trust level by adding the delta
+          const newLevel = Math.min(100, Math.max(0, prevLevel + parsedData.trust));
+          console.log(`Trust delta: ${parsedData.trust}, Previous level: ${prevLevel}, New level: ${newLevel}`);
+          return newLevel;
+        });
       }
       
       // Update objectives based on the response
