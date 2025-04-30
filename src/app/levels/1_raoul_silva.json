@@ -10,10 +10,8 @@
       }
     ],
     "objectives": [
-        { "id": 1, "text": "Establish contact with Silva", "completed": true },
-        { "id": 2, "text": "Uncover Silva's location", "completed": false },
-        { "id": 3, "text": "Learn details about the next planned attack", "completed": false },
-        { "id": 4, "text": "Discover Silva's connection to Quantum", "completed": false }
+        { "id": "locationObjective", "text": "Uncover Silva's location"},
+        { "id": "planObjective", "text": "Learn details about the next planned attack"},
     ],
     "mission_name": "OPERATION SKYFALL",
     "target": {

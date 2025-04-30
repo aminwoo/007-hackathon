@@ -6,12 +6,12 @@
       },
       {
         "role": "assistant", 
-        "content": "Ah, Mr. Bond. I've been expecting you. I understand you've joined our little game."
+        "content": "The stakes are high tonight"
       }
     ],
     "objectives": [
-        { "id": "poisonObjective", "text": "Establish contact with target", "completed": true },
-        { "id": "locationObjective", "text": "Gather intelligence on financial situation", "completed": false }
+        { "id": "poisonObjective", "text": "Establish contact with target"},
+        { "id": "locationObjective", "text": "Gather intelligence on financial situation"}
     ],
     "mission_name": "OPERATION CASINO ROYALE",
     "target": {
