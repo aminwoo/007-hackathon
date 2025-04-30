@@ -51,7 +51,9 @@ export default function HomeClient() {
             <p className="text-sm mb-2 text-green-400 typewriter boot-text-2">VERIFYING CREDENTIALS...</p>
             <p className="text-sm mb-2 text-green-400 typewriter boot-text-3">WELCOME, 007.</p>
             <p className="text-sm mb-4 text-green-400 typewriter boot-text-4">SECURE CONNECTION ESTABLISHED.</p>
-            <p className="text-sm mb-2 text-yellow-400 typewriter boot-text-5 urgent-text">URGENT: NEW MISSION ASSIGNMENT</p>
+            <p className="text-sm mb-2 text-orange-500 font-bold typewriter boot-text-5">
+              <span className="urgent-text">URGENT: NEW MISSION ASSIGNMENT</span>
+            </p>
             <p className="text-sm mb-4 text-green-400 typewriter boot-text-6">AWAITING CONFIRMATION...</p>
           </div>
           
