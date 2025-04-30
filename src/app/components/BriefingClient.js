@@ -12,6 +12,12 @@ const AudioPlayer = dynamic(() => import('./BriefingAudioPlayer'), { ssr: false 
 export default function BriefingClient({ missionId = '0_le_chiffre' }) {
   const [missionData, setMissionData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [skipAnimations, setSkipAnimations] = useState(false);
+  
+  // Handle click to skip animations
+  const handleSkipAnimations = () => {
+    setSkipAnimations(true);
+  };
   
   // Load mission data
   useEffect(() => {
@@ -49,9 +55,9 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
     <>
       <AudioPlayer />
       <SoundControl />
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto" onClick={handleSkipAnimations}>
         {/* Top Secret Header */}
-        <div className="border-b-2 border-red-600 mb-8 pb-4 fade-in" style={{ animationDuration: '1s' }}>
+        <div className={`border-b-2 border-red-600 mb-8 pb-4 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s' }}>
           <h1 className="text-red-600 text-center text-4xl font-bold tracking-wider">
             TOP SECRET
           </h1>
@@ -59,7 +65,7 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
         </div>
         
         {/* Mission Header */}
-        <div className="mb-8 fade-in" style={{ animationDuration: '1s', animationDelay: '0.5s' }}>
+        <div className={`mb-8 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s', animationDelay: '0.5s' }}>
           <h2 className="text-2xl font-bold mb-2 text-gray-100">MISSION BRIEFING: {missionData.mission_name}</h2>
           <p className="text-sm text-gray-400">
             AGENT: 007 | DATE: {new Date().toLocaleDateString()} | TIME: {new Date().toLocaleTimeString()}
@@ -67,7 +73,7 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
         </div>
         
         {/* Target Information */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 fade-in" style={{ animationDuration: '1s', animationDelay: '1s' }}>
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s', animationDelay: '1s' }}>
           <div className="col-span-1 flex justify-center">
             <div className="w-64 h-auto border border-gray-700 relative">
               <Image
@@ -130,7 +136,7 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
         </div>
         
         {/* Additional Intelligence */}
-        <div className="mb-8 fade-in" style={{ animationDuration: '1s', animationDelay: '1.5s' }}>
+        <div className={`mb-8 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s', animationDelay: '1.5s' }}>
           <h3 className="text-xl font-bold mb-4 text-gray-100">ADDITIONAL INTELLIGENCE</h3>
           <ul className="list-disc pl-5 space-y-2">
             {missionData.intelligence.map((item, index) => (
@@ -140,9 +146,9 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
         </div>
         
         {/* Footer */}
-        <div className="border-t-2 border-gray-700 pt-4 flex justify-between items-center fade-in" style={{ animationDuration: '1s', animationDelay: '2s' }}>
+        <div className={`border-t-2 border-gray-700 pt-4 flex justify-between items-center ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s', animationDelay: '2s' }}>
           <p className="text-sm text-gray-500">
-            This document will self-destruct in <span className="countdown text-red-500 font-bold"></span> seconds
+            This document will self-destruct in <span className={skipAnimations ? 'text-red-500 font-bold' : 'countdown text-red-500 font-bold'}>{skipAnimations ? '60' : ''}</span> seconds
           </p>
           <div className="flex gap-4">
             <Link 
