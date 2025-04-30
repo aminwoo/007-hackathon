@@ -48,16 +48,53 @@ export async function POST(request) {
     console.log(responseData)
     
     try {
-      // Try to parse the AI response as JSON to extract trust value
+      // Try to parse the AI response as JSON to extract trust value and objectives
       const parsedContent = JSON.parse(completion.choices[0].message.content);
       if (parsedContent && typeof parsedContent.message === 'string') {
+        // Start with the basic response data
         responseData = {
           message: parsedContent.message,
           trust: parsedContent.trust || 0
         };
+        
+        // Add objectives from the response if they exist
+        if (parsedContent.objectives) {
+          responseData.objectives = parsedContent.objectives;
+          console.log('Found objectives in response:', parsedContent.objectives);
+        } 
+        // For backward compatibility, also check for direct objective fields
+        else {
+          const objectives = {};
+          
+          if (missionId === '0_le_chiffre') {
+            // Le Chiffre objectives
+            if (parsedContent.poisonObjective !== undefined) {
+              objectives.poisonObjective = parsedContent.poisonObjective;
+            }
+            if (parsedContent.locationObjective !== undefined) {
+              objectives.locationObjective = parsedContent.locationObjective;
+            }
+          } else if (missionId === '1_raoul_silva') {
+            // Raoul Silva objectives
+            if (parsedContent.locationObjective !== undefined) {
+              objectives.locationObjective = parsedContent.locationObjective;
+            }
+            if (parsedContent.planObjective !== undefined) {
+              objectives.planObjective = parsedContent.planObjective;
+            }
+          }
+          
+          // Only add objectives if we found any
+          if (Object.keys(objectives).length > 0) {
+            responseData.objectives = objectives;
+            console.log('Created objectives object:', objectives);
+          }
+        }
+        
+        console.log('Parsed response data:', responseData);
       }
     } catch (parseError) {
-      console.log('Response was not valid JSON, using raw content');
+      console.log('Response was not valid JSON, using raw content:', parseError);
     }
     
     return NextResponse.json(responseData);
