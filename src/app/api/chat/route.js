@@ -49,7 +49,32 @@ export async function POST(request) {
     
     try {
       // Try to parse the AI response as JSON to extract trust value and objectives
-      const parsedContent = JSON.parse(completion.choices[0].message.content);
+      let parsedContent;
+      const content = completion.choices[0].message.content;
+      
+      try {
+        // First attempt: try parsing as is (assuming proper JSON with double quotes)
+        parsedContent = JSON.parse(content);
+      } catch (initialParseError) {
+        // Second attempt: try to handle single quotes by converting to valid JSON
+        // This regex replaces single quotes with double quotes, but only for object keys and string values
+        // It's a simplified approach that handles most common cases
+        const fixedContent = content
+          // Replace single-quoted keys with double-quoted keys
+          .replace(/'([^']+)'(\s*:)/g, '"$1"$2')
+          // Replace single-quoted values with double-quoted values
+          .replace(/:\s*'([^']*)'/g, ': "$1"');
+          
+        try {
+          parsedContent = JSON.parse(fixedContent);
+          console.log('Parsed JSON after fixing single quotes');
+        } catch (secondParseError) {
+          // If both attempts fail, throw the original error
+          console.error('Failed to parse JSON even after fixing quotes:', secondParseError);
+          throw initialParseError;
+        }
+      }
+      
       if (parsedContent && typeof parsedContent.message === 'string') {
         // Start with the basic response data
         responseData = {
