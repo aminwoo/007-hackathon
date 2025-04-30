@@ -89,7 +89,7 @@
 }
 
 .boot-text-5 {
-  animation: typing 0.7s steps(40, end) 3.3s forwards, pulse 1.5s infinite 4s;
+  animation: typing 0.7s steps(40, end) 3.3s forwards;
 }
 
 .boot-text-6 {
@@ -100,8 +100,9 @@
   animation: blink 1s step-end infinite;
 }
 
+/* Apply pulse animation to urgent text */
 .urgent-text {
-  animation: pulse 1.5s infinite;
+  animation: pulse 1.5s infinite 4s;
 }
 
 .glitch-text {
