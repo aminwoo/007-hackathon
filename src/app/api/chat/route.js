@@ -27,16 +27,32 @@ export async function POST(request) {
       content: missionData.prompt[0].content
     };
 
+    // Get the first user message from the mission data
+    const userMessage = {
+      role: 'user',
+      content: JSON.stringify({
+        target: missionData.target,
+        targetInstructions: missionData.targetInstructions,
+        objective: missionData.objective,
+        objectives: missionData.objectives,
+        intelligence: missionData.intelligence,
+        alias: missionData.alias
+      }).replace(/\\"/g, '"')
+    }
+
     // Add system message to the beginning of the conversation
-    const conversationWithSystem = [systemMessage, ...messages];
+    const conversationWithSystem = [systemMessage, userMessage, ...messages];
+
+    console.log('<<<<<<<New chat request=======')
+    console.log(conversationWithSystem)
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
       // model: 'gpt-3.5-turbo',
       model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       messages: conversationWithSystem,
-      max_tokens: 500, // Increased max_tokens to ensure we get the complete JSON response
-      temperature: 0.7,
+      max_tokens: 1024, // Increased max_tokens to ensure we get the complete JSON response
+      temperature: 0,
       // stream: false
     });
 
@@ -45,12 +61,14 @@ export async function POST(request) {
     // Parse the JSON response from the AI
     let responseData = { message: completion.choices[0].message.content };
 
+    console.log('=========RESPONSE=========')
     console.log(responseData)
+    console.log('============>>>>>>>>>>>')
     
     try {
       // Get the raw content from the API response
       const rawContent = completion.choices[0].message.content;
-      console.log('Raw API response:', rawContent);
+      // console.log('Raw API response:', rawContent);
       
       // Try to fix common JSON formatting issues
       let jsonString = rawContent;
@@ -59,8 +77,7 @@ export async function POST(request) {
       if (jsonString.trim().startsWith('{') && !jsonString.trim().endsWith('}')) {
         console.log('JSON appears to be incomplete, attempting to fix...');
         // Try to find the last complete JSON object by finding the last closing brace
-        const lastBraceIndex = jsonString.lastIndexOf('}');
-        if (lastBraceIndex > 0) {
+        const lastBraceIndex = jsonString.lastIndexOf('}'); if (lastBraceIndex > 0) {
           jsonString = jsonString.substring(0, lastBraceIndex + 1);
           console.log('Truncated JSON to:', jsonString);
         }
@@ -80,35 +97,7 @@ export async function POST(request) {
           responseData.objectives = parsedContent.objectives;
           console.log('Found objectives in response:', parsedContent.objectives);
         } 
-        // For backward compatibility, also check for direct objective fields
-        else {
-          const objectives = {};
-          
-          if (missionId === '0_le_chiffre') {
-            // Le Chiffre objectives
-            if (parsedContent.poisonObjective !== undefined) {
-              objectives.poisonObjective = parsedContent.poisonObjective;
-            }
-            if (parsedContent.locationObjective !== undefined) {
-              objectives.locationObjective = parsedContent.locationObjective;
-            }
-          } else if (missionId === '1_raoul_silva') {
-            // Raoul Silva objectives
-            if (parsedContent.locationObjective !== undefined) {
-              objectives.locationObjective = parsedContent.locationObjective;
-            }
-            if (parsedContent.planObjective !== undefined) {
-              objectives.planObjective = parsedContent.planObjective;
-            }
-          }
-          
-          // Only add objectives if we found any
-          if (Object.keys(objectives).length > 0) {
-            responseData.objectives = objectives;
-            console.log('Created objectives object:', objectives);
-          }
-        }
-        
+
         console.log('Parsed response data:', responseData);
       }
     } catch (parseError) {
