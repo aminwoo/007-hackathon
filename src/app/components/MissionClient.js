@@ -15,6 +15,22 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   const [displayedSussLevel, setDisplayedSussLevel] = useState(30); // For animation
   const messagesEndRef = useRef(null);
   
+  // Function to get Le Chiffre's image based on trust level
+  const getLeChiffreImage = (trustLevel) => {
+    // Only apply dynamic images for Le Chiffre mission
+    if (missionId !== '0_le_chiffre') {
+      return missionData?.target.img;
+    }
+    
+    if (trustLevel <= 33) {
+      return "/images/le_chiffre/l_angry.png";
+    } else if (trustLevel <= 65) {
+      return "/images/le_chiffre/l_neutral.png";
+    } else {
+      return "/images/le_chiffre/l_happy.png";
+    }
+  };
+  
   // Load mission data
   useEffect(() => {
     const loadMissionData = async () => {
@@ -96,6 +112,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     // Set up interval for animation
     const animationInterval = setInterval(animate, animationSpeed);
     
+    getLeChiffreImage()
     // Clean up interval when component unmounts or sussLevel changes
     return () => clearInterval(animationInterval);
   }, [sussLevel, displayedSussLevel]);
@@ -348,7 +365,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               <div className="flex items-center">
                 <div className="w-10 h-10 relative mr-3">
                   <Image
-                    src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
+                    src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
                     alt={missionData?.target.name || "Target"}
                     width={40}
                     height={40}
@@ -438,7 +455,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
                 <Image
-                  src={missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg"}
+                  src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : (missionData?.target.img || "/images/Le_Chiffre_by_Mads_Mikkelsen.jpg")}
                   alt={missionData?.target.name || "Target"}
                   width={50}
                   height={50}
@@ -605,7 +622,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                 <div className="flex items-start">
                   <div className="mr-4">
                     <Image
-                      src={missionData.target.img}
+                      src={missionId === '0_le_chiffre' ? getLeChiffreImage(displayedSussLevel) : missionData.target.img}
                       alt={missionData.target.name}
                       width={120}
                       height={160}
