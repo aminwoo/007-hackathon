@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import SoundControl from './SoundControl';
@@ -19,6 +19,7 @@ export default function MissionClient() {
     }
   ]);
   const [inputText, setInputText] = useState('');
+  const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom of messages
@@ -31,18 +32,26 @@ export default function MissionClient() {
     const lowerText = text.toLowerCase();
     
     if (lowerText.includes('money') || lowerText.includes('funds') || lowerText.includes('cash')) {
+      setSussLevel(prev => Math.min(prev + 15, 100)); // Increase suspicion
       return "Money is merely a tool, Mr. Bond. Though I admit, I'm in need of quite a lot of it at the moment.";
     } else if (lowerText.includes('poker') || lowerText.includes('game') || lowerText.includes('casino')) {
+      setSussLevel(prev => Math.min(prev + 10, 100)); // Increase suspicion
       return "The game is simple, Mr. Bond. The stakes, however, are not. Are you prepared to lose everything?";
     } else if (lowerText.includes('terrorist') || lowerText.includes('client') || lowerText.includes('organization')) {
+      setSussLevel(prev => Math.min(prev + 25, 100)); // Increase suspicion significantly
       return "My clients value their privacy. As do I. Let's keep our conversation to the game at hand.";
     } else if (lowerText.includes('eye') || lowerText.includes('scar') || lowerText.includes('blood')) {
+      setSussLevel(prev => Math.min(prev + 20, 100)); // Increase suspicion
       return "My... condition... is not a topic for discussion. Focus on your cards, not my appearance.";
     } else if (lowerText.includes('win') || lowerText.includes('beat') || lowerText.includes('defeat')) {
+      setSussLevel(prev => Math.min(prev + 5, 100)); // Small increase in suspicion
       return "Confidence is admirable, but mathematics is reliable. The odds favor me, Mr. Bond.";
     } else if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('greetings')) {
+      // No change in suspicion for greetings
       return "Let's dispense with pleasantries. We both know why you're here.";
     } else {
+      // Small random change in suspicion for generic responses
+      setSussLevel(prev => Math.max(0, Math.min(100, prev + (Math.random() > 0.5 ? 3 : -2))));
       return "Your attempts at distraction won't work, Mr. Bond. I'm focused solely on our game and the considerable sum at stake.";
     }
   };
@@ -194,10 +203,93 @@ export default function MissionClient() {
               </ul>
             </div>
             
-            <div>
+            <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-400 mb-2">MISSION STATUS</h3>
               <p className="text-green-500 font-bold">ACTIVE</p>
               <p className="text-xs text-gray-500 mt-1">Secure channel established</p>
+            </div>
+            
+            {/* Suss Meter */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-400 mb-2">SUSPICION METER</h3>
+              <div className="relative w-full h-32 flex justify-center">
+                {/* Gauge Background */}
+                <svg width="140" height="100" viewBox="0 0 140 100" className="mt-2">
+                  {/* Gauge Outer Ring */}
+                  <path 
+                    d="M10,90 A80,80 0 0,1 130,90" 
+                    fill="none" 
+                    stroke="#333" 
+                    strokeWidth="6"
+                  />
+                  
+                  {/* Gauge Inner Background */}
+                  <path 
+                    d="M20,90 A70,70 0 0,1 120,90" 
+                    fill="none" 
+                    stroke="#222" 
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Gauge Color Gradient - Low (Green) */}
+                  <path 
+                    d="M20,90 A70,70 0 0,1 53,60" 
+                    fill="none" 
+                    stroke="#1faa00" 
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Gauge Color Gradient - Medium (Yellow) */}
+                  <path 
+                    d="M53,60 A70,70 0 0,1 87,60" 
+                    fill="none" 
+                    stroke="#dbd000" 
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Gauge Color Gradient - High (Red) */}
+                  <path 
+                    d="M87,60 A70,70 0 0,1 120,90" 
+                    fill="none" 
+                    stroke="#d10000" 
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Gauge Center Point */}
+                  <circle cx="70" cy="90" r="6" fill="#444" stroke="#222" strokeWidth="1" />
+                  
+                  {/* Gauge Needle - Rotates based on suss level */}
+                  <line 
+                    x1="70" 
+                    y1="90" 
+                    x2="70" 
+                    y2="30" 
+                    stroke="#ff3333" 
+                    strokeWidth="2"
+                    style={{
+                      transformOrigin: '70px 90px',
+                      transform: `rotate(${-90 + (sussLevel * 1.8)}deg)`
+                    }}
+                  />
+                  <circle cx="70" cy="90" r="3" fill="#ff3333" />
+                </svg>
+                
+                {/* Digital Readout */}
+                <div className="absolute bottom-0 w-full text-center">
+                  <div className="inline-block bg-black border border-gray-700 px-3 py-1 rounded">
+                    <span className="text-sm text-gray-400">LEVEL: </span>
+                    <span className={`font-mono font-bold ${
+                      sussLevel < 30 ? 'text-green-500' : 
+                      sussLevel < 70 ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>{sussLevel}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
