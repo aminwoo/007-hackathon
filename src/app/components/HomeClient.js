@@ -57,30 +57,30 @@ export default function HomeClient() {
             <p className="text-sm mb-4 text-green-400 typewriter boot-text-6">AWAITING CONFIRMATION...</p>
           </div>
           
-          <div className="mb-6 mt-16">
-            <p className="text-lg mb-4 flex items-center fade-in" style={{ animationDuration: '1s', animationDelay: '4.5s' }}>
+          <div className="mb-6 mt-16 fade-in" style={{ animationDuration: '1s', animationDelay: '5s' }}>
+            <p className="text-lg mb-4 flex items-center">
               <span className="message-indicator mr-2">▶</span>
               INCOMING MESSAGE FROM M:
             </p>
-            <div className="bg-gray-900 p-4 border-l-2 border-green-500 fade-in" style={{ animationDuration: '0.5s', animationDelay: '4.7s' }}>
-              <p className="mb-2 typewriter typewriter-1">007,</p>
-              <p className="mb-2 typewriter typewriter-2">
+            <div className="bg-gray-900 p-4 border-l-2 border-green-500">
+              <p className="mb-2">007,</p>
+              <p className="mb-2">
                 We have a situation that requires your immediate attention. A high-profile target has been identified 
                 for your next assignment.
               </p>
-              <p className="mb-2 typewriter typewriter-3">
+              <p className="mb-2">
                 Review the attached briefing for complete details on the target and mission parameters.
               </p>
-              <p className="typewriter typewriter-4">
+              <p>
                 -M
               </p>
             </div>
           </div>
           
-          <div className="flex justify-center mt-8">
+          <div className="flex justify-center mt-8 fade-in" style={{ animationDuration: '1s', animationDelay: '6s' }}>
             <Link 
               href="/briefing"
-              className="bg-green-800 hover:bg-green-700 text-green-100 px-6 py-3 rounded border border-green-600 transition-colors flex items-center fade-in button-fade-in"
+              className="bg-green-800 hover:bg-green-700 text-green-100 px-6 py-3 rounded border border-green-600 transition-colors flex items-center"
             >
               <span className="mr-2">ACCESS MISSION BRIEFING</span>
               <span className="animate-pulse">▶</span>
