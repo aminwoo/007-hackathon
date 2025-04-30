@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import SoundControl from './SoundControl';
 
 export default function MissionClient() {
+  const router = useRouter();
   const [messages, setMessages] = useState([
     { 
       sender: 'system', 
@@ -22,13 +24,98 @@ export default function MissionClient() {
   const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
   const messagesEndRef = useRef(null);
 
+  // Mission objectives state
+  const [objectives, setObjectives] = useState([
+    { id: 1, text: 'Establish contact with target', completed: true },
+    { id: 2, text: 'Gather intelligence on financial situation', completed: false },
+    { id: 3, text: 'Identify weaknesses to exploit', completed: false },
+    { id: 4, text: 'Secure invitation to poker game', completed: false }
+  ]);
+  
+  // Game state
+  const [gameEnded, setGameEnded] = useState(false);
+  const [showEndGamePrompt, setShowEndGamePrompt] = useState(false);
+
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Check for keywords in messages to update objectives
+  useEffect(() => {
+    // Only check the last message if it's from Le Chiffre
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.sender === 'le-chiffre') {
+      const text = lastMessage.text.toLowerCase();
+      
+      // Check for financial information
+      if (text.includes('money') || text.includes('funds') || text.includes('financial') || 
+          text.includes('debt') || text.includes('investment') || text.includes('loss')) {
+        updateObjective(2);
+      }
+      
+      // Check for weaknesses
+      if (text.includes('asthma') || text.includes('inhaler') || text.includes('weakness') || 
+          text.includes('afraid') || text.includes('fear') || text.includes('desperate')) {
+        updateObjective(3);
+      }
+      
+      // Check for poker game invitation
+      if (text.includes('invite') || text.includes('poker') || text.includes('game') || 
+          text.includes('casino') || text.includes('play') || text.includes('table')) {
+        updateObjective(4);
+      }
+      
+      // Check if all objectives are completed
+      checkAllObjectivesCompleted();
+    }
+  }, [messages]);
+  
+  // Update an objective by ID
+  const updateObjective = (id) => {
+    setObjectives(prev => 
+      prev.map(obj => 
+        obj.id === id ? { ...obj, completed: true } : obj
+      )
+    );
+  };
+  
+  // Check if all objectives are completed
+  const checkAllObjectivesCompleted = () => {
+    const allCompleted = objectives.every(obj => obj.completed);
+    if (allCompleted && !gameEnded && !showEndGamePrompt) {
+      setShowEndGamePrompt(true);
+    }
+  };
+  
+  // Calculate score based on objectives and message count
+  const calculateScore = () => {
+    const completedObjectives = objectives.filter(obj => obj.completed).length;
+    const totalObjectives = objectives.length;
+    const objectiveScore = Math.round((completedObjectives / totalObjectives) * 70);
+    
+    // Calculate efficiency score (fewer messages = higher score)
+    const userMessages = messages.filter(msg => msg.sender === 'bond').length;
+    let efficiencyScore = 30;
+    if (userMessages > 10) {
+      efficiencyScore = Math.max(0, 30 - ((userMessages - 10) * 3));
+    }
+    
+    return objectiveScore + efficiencyScore;
+  };
+  
+  // End game and go to score screen
+  const endGame = () => {
+    const score = calculateScore();
+    const objectivesForUrl = encodeURIComponent(JSON.stringify(
+      objectives.map(obj => ({ text: obj.text, completed: obj.completed }))
+    ));
+    router.push(`/score?score=${score}&objectives=${objectivesForUrl}`);
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -43,6 +130,7 @@ export default function MissionClient() {
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
+    setIsTyping(true);
     setError(null);
 
     try {
@@ -81,8 +169,13 @@ export default function MissionClient() {
         text: data.message,
         time: new Date().toLocaleTimeString()
       };
-      setMessages(prev => [...prev, leChiffreResponse]);
+      // Simulate typing delay for realism
+      setTimeout(() => {
+        setMessages(prev => [...prev, leChiffreResponse]);
+        setIsTyping(false);
+      }, 1500);
     } catch (err) {
+      setIsTyping(false);
       console.error('Error getting response:', err);
       setError('Connection lost. Try again later.');
       
@@ -167,6 +260,17 @@ export default function MissionClient() {
                   </div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[70%] p-3 rounded-lg bg-gray-800 text-gray-300">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -225,22 +329,14 @@ export default function MissionClient() {
                 OBJECTIVES
               </h3>
               <ul className="text-sm text-gray-400 space-y-2">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Establish contact with target</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-gray-600 mr-2">○</span>
-                  <span>Gather intelligence on financial situation</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-gray-600 mr-2">○</span>
-                  <span>Identify weaknesses to exploit</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-gray-600 mr-2">○</span>
-                  <span>Secure invitation to poker game</span>
-                </li>
+                {objectives.map((objective) => (
+                  <li key={objective.id} className="flex items-start">
+                    <span className={objective.completed ? "text-green-500 mr-2" : "text-gray-600 mr-2"}>
+                      {objective.completed ? "✓" : "○"}
+                    </span>
+                    <span>{objective.text}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -349,6 +445,18 @@ export default function MissionClient() {
                 </div>
               </div>
             </div>
+            
+            {showEndGamePrompt && (
+              <div className="mt-6 p-3 bg-blue-900 bg-opacity-50 border border-blue-700 rounded animate-pulse">
+                <p className="text-sm text-blue-300 mb-2">All objectives completed!</p>
+                <button 
+                  onClick={endGame}
+                  className="w-full bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                >
+                  End Mission
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
