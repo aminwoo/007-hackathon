@@ -75,6 +75,8 @@ Remember that you never fully trust anyone. You are always thinking several move
     
     // Parse the JSON response from the AI
     let responseData = { message: completion.choices[0].message.content };
+
+    console.log(responseData)
     
     try {
       // Try to parse the AI response as JSON to extract trust value
