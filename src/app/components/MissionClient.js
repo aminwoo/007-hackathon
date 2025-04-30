@@ -27,38 +27,12 @@ export default function MissionClient() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Le Chiffre's responses based on user input
-  const getResponse = (text) => {
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('money') || lowerText.includes('funds') || lowerText.includes('cash')) {
-      setSussLevel(prev => Math.min(prev + 15, 100)); // Increase suspicion
-      return "Money is merely a tool, Mr. Bond. Though I admit, I'm in need of quite a lot of it at the moment.";
-    } else if (lowerText.includes('poker') || lowerText.includes('game') || lowerText.includes('casino')) {
-      setSussLevel(prev => Math.min(prev + 10, 100)); // Increase suspicion
-      return "The game is simple, Mr. Bond. The stakes, however, are not. Are you prepared to lose everything?";
-    } else if (lowerText.includes('terrorist') || lowerText.includes('client') || lowerText.includes('organization')) {
-      setSussLevel(prev => Math.min(prev + 25, 100)); // Increase suspicion significantly
-      return "My clients value their privacy. As do I. Let's keep our conversation to the game at hand.";
-    } else if (lowerText.includes('eye') || lowerText.includes('scar') || lowerText.includes('blood')) {
-      setSussLevel(prev => Math.min(prev + 20, 100)); // Increase suspicion
-      return "My... condition... is not a topic for discussion. Focus on your cards, not my appearance.";
-    } else if (lowerText.includes('win') || lowerText.includes('beat') || lowerText.includes('defeat')) {
-      setSussLevel(prev => Math.min(prev + 5, 100)); // Small increase in suspicion
-      return "Confidence is admirable, but mathematics is reliable. The odds favor me, Mr. Bond.";
-    } else if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('greetings')) {
-      // No change in suspicion for greetings
-      return "Let's dispense with pleasantries. We both know why you're here.";
-    } else {
-      // Small random change in suspicion for generic responses
-      setSussLevel(prev => Math.max(0, Math.min(100, prev + (Math.random() > 0.5 ? 3 : -2))));
-      return "Your attempts at distraction won't work, Mr. Bond. I'm focused solely on our game and the considerable sum at stake.";
-    }
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isLoading) return;
 
     // Add user message
     const userMessage = {
@@ -68,16 +42,60 @@ export default function MissionClient() {
     };
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
+    setIsLoading(true);
+    setError(null);
 
-    // Add Le Chiffre's response after a delay
-    setTimeout(() => {
-      const response = {
+    try {
+      // Format messages for OpenAI API
+      const formattedMessages = messages
+        .filter(msg => msg.sender !== 'system') // Remove system messages
+        .map(msg => ({
+          role: msg.sender === 'bond' ? 'user' : 'assistant',
+          content: msg.text
+        }));
+
+      // Add the new user message
+      formattedMessages.push({
+        role: 'user',
+        content: userMessage.text
+      });
+
+      // Call our API route
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: formattedMessages }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Le Chiffre');
+      }
+
+      const data = await response.json();
+
+      // Add Le Chiffre's response
+      const leChiffreResponse = {
         sender: 'le-chiffre',
-        text: getResponse(inputText),
+        text: data.message,
         time: new Date().toLocaleTimeString()
       };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
+      setMessages(prev => [...prev, leChiffreResponse]);
+    } catch (err) {
+      console.error('Error getting response:', err);
+      setError('Connection lost. Try again later.');
+      
+      // Add error message
+      const errorMessage = {
+        sender: 'system',
+        text: 'Connection error. Secure channel may be compromised.',
+        time: new Date().toLocaleTimeString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,14 +167,17 @@ export default function MissionClient() {
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Type your message..."
                   className="flex-1 bg-gray-800 text-gray-300 p-2 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  disabled={isLoading}
                 />
                 <button 
                   type="submit"
-                  className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2 rounded-r"
+                  className={`${isLoading ? 'bg-blue-900' : 'bg-blue-700 hover:bg-blue-600'} text-white px-4 py-2 rounded-r`}
+                  disabled={isLoading}
                 >
-                  Send
+                  {isLoading ? 'Sending...' : 'Send'}
                 </button>
               </div>
+              {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
             </form>
           </div>
           
