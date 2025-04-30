@@ -27,8 +27,22 @@ export async function POST(request) {
       content: missionData.prompt[0].content
     };
 
+    // Get the first user message from the mission data
+    const userMessage = {
+      role: 'user',
+      content: JSON.stringify({
+        target: missionData.target,
+        objective: missionData.objective,
+        objectives: missionData.objectives,
+        intelligence: missionData.intelligence,
+        alias: missionData.alias
+      }).replace(/\\"/g, '"')
+    }
+
     // Add system message to the beginning of the conversation
-    const conversationWithSystem = [systemMessage, ...messages];
+    const conversationWithSystem = [systemMessage, userMessage, ...messages];
+
+    // console.log(conversationWithSystem)
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
