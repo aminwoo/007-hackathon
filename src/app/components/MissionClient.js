@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import SoundControl from './SoundControl';
@@ -19,6 +19,7 @@ export default function MissionClient() {
     }
   ]);
   const [inputText, setInputText] = useState('');
+  const [sussLevel, setSussLevel] = useState(30); // Initial suspicion level (0-100)
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom of messages
@@ -104,17 +105,21 @@ export default function MissionClient() {
         {/* Mission Header */}
         <div className="border-b border-red-800 mb-8 pb-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-wider text-red-600">OPERATION CASINO ROYALE</h1>
-            <p className="text-sm text-gray-500">SECURE COMMUNICATION CHANNEL</p>
+            <h1 className="text-2xl font-bold tracking-wider text-red-600">
+              OPERATION CASINO ROYALE
+            </h1>
+            <p className="text-sm text-gray-500">
+              SECURE COMMUNICATION CHANNEL
+            </p>
           </div>
-          <Link 
+          <Link
             href="/briefing"
             className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded border border-gray-600 transition-colors text-sm"
           >
             Return to Briefing
           </Link>
         </div>
-        
+
         {/* Chat Interface */}
         <div className="flex h-[70vh]">
           {/* Chat Messages */}
@@ -137,28 +142,38 @@ export default function MissionClient() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, index) => (
-                <div key={index} className={`flex ${msg.sender === 'bond' ? 'justify-end' : 'justify-start'}`}>
-                  <div 
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.sender === "bond" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
                     className={`max-w-[70%] p-3 rounded-lg ${
-                      msg.sender === 'bond' 
-                        ? 'bg-blue-900 text-blue-100' 
-                        : msg.sender === 'le-chiffre'
-                          ? 'bg-gray-800 text-gray-300'
-                          : 'bg-gray-700 text-gray-400 italic text-sm'
+                      msg.sender === "bond"
+                        ? "bg-blue-900 text-blue-100"
+                        : msg.sender === "le-chiffre"
+                        ? "bg-gray-800 text-gray-300"
+                        : "bg-gray-700 text-gray-400 italic text-sm"
                     }`}
                   >
                     <p>{msg.text}</p>
-                    <p className="text-xs text-right mt-1 opacity-70">{msg.time}</p>
+                    <p className="text-xs text-right mt-1 opacity-70">
+                      {msg.time}
+                    </p>
                   </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
-            
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-black">
+
+            <form
+              onSubmit={handleSendMessage}
+              className="p-4 border-t border-gray-800 bg-black"
+            >
               <div className="flex">
                 <input
                   type="text"
@@ -168,22 +183,26 @@ export default function MissionClient() {
                   className="flex-1 bg-gray-800 text-gray-300 p-2 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
                   disabled={isLoading}
                 />
-                <button 
+                <button
                   type="submit"
-                  className={`${isLoading ? 'bg-blue-900' : 'bg-blue-700 hover:bg-blue-600'} text-white px-4 py-2 rounded-r`}
+                  className={`${
+                    isLoading ? "bg-blue-900" : "bg-blue-700 hover:bg-blue-600"
+                  } text-white px-4 py-2 rounded-r`}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Sending...' : 'Send'}
+                  {isLoading ? "Sending..." : "Send"}
                 </button>
               </div>
               {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
             </form>
           </div>
-          
+
           {/* Mission Info Sidebar */}
           <div className="w-64 bg-black border-t border-r border-b border-gray-800 rounded-r p-4">
-            <h2 className="text-lg font-bold mb-4 text-gray-300">Mission Info</h2>
-            
+            <h2 className="text-lg font-bold mb-4 text-gray-300">
+              Mission Info
+            </h2>
+
             <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-400 mb-2">TARGET</h3>
               <div className="flex items-center">
@@ -200,9 +219,11 @@ export default function MissionClient() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mb-6">
-              <h3 className="text-sm font-bold text-gray-400 mb-2">OBJECTIVES</h3>
+              <h3 className="text-sm font-bold text-gray-400 mb-2">
+                OBJECTIVES
+              </h3>
               <ul className="text-sm text-gray-400 space-y-2">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
@@ -222,15 +243,115 @@ export default function MissionClient() {
                 </li>
               </ul>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-bold text-gray-400 mb-2">MISSION STATUS</h3>
+
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-gray-400 mb-2">
+                MISSION STATUS
+              </h3>
               <p className="text-green-500 font-bold">ACTIVE</p>
-              <p className="text-xs text-gray-500 mt-1">Secure channel established</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Secure channel established
+              </p>
+            </div>
+
+            {/* Trust Meter */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-400">TRUST METER</h3>
+              <div className="relative w-full h-32 flex justify-center -mt-6">
+                {/* Gauge Background */}
+                <svg width="140" height="100" viewBox="0 0 140 100">
+                  {/* Gauge Outer Ring */}
+                  <path
+                    d="M10,90 A80,80 0 0,1 130,90"
+                    fill="none"
+                    stroke="#333"
+                    strokeWidth="6"
+                  />
+
+                  {/* Gauge Inner Background */}
+                  <path
+                    d="M20,90 A70,70 0 0,1 120,90"
+                    fill="none"
+                    stroke="#222"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Gauge Color Gradient - Low (Red) */}
+                  <path
+                    d="M87,60 A70,70 0 0,1 120,90"
+                    fill="none"
+                    stroke="#d10000"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Gauge Color Gradient - Medium (Yellow) */}
+                  <path
+                    d="M53,60 A70,70 0 0,1 87,60"
+                    fill="none"
+                    stroke="#dbd000"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Gauge Color Gradient - High (Green) */}
+                  <path
+                    d="M20,90 A70,70 0 0,1 53,60"
+                    fill="none"
+                    stroke="#1faa00"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Gauge Center Point */}
+                  <circle
+                    cx="70"
+                    cy="90"
+                    r="6"
+                    fill="#444"
+                    stroke="#222"
+                    strokeWidth="1"
+                  />
+
+                  {/* Gauge Needle - Rotates based on suss level */}
+                  <line
+                    x1="70"
+                    y1="90"
+                    x2="70"
+                    y2="30"
+                    stroke="#ff3333"
+                    strokeWidth="2"
+                    style={{
+                      transformOrigin: "70px 90px",
+                      transform: `rotate(${-90 + sussLevel * 1.8}deg)`,
+                    }}
+                  />
+                  <circle cx="70" cy="90" r="3" fill="#ff3333" />
+                </svg>
+
+                {/* Digital Readout */}
+                <div className="absolute bottom-0 w-full text-center">
+                  <div className="inline-block bg-black border border-gray-700 px-3 py-1 rounded">
+                    <span className="text-sm text-gray-400">LEVEL: </span>
+                    <span
+                      className={`font-mono font-bold ${
+                        sussLevel < 30
+                          ? "text-green-500"
+                          : sussLevel < 70
+                          ? "text-yellow-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {sussLevel}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        
+
         {/* Mission Footer */}
         <div className="text-xs text-gray-700 border-t border-gray-900 mt-4 pt-4">
           <p>ENCRYPTION: ACTIVE | CONNECTION: SECURE | LOCATION: MONTENEGRO</p>
