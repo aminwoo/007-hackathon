@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BackgroundAudio from "@/components/BackgroundAudio";
+import "./animations.css";
 
 const inter = Inter({
   variable: "--font-geist-sans",
