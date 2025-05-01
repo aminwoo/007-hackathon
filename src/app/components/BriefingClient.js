@@ -168,7 +168,7 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
               
               <div className="bg-blue-900 bg-opacity-30 p-3 border-l-4 border-blue-500">
                 <h4 className="text-blue-400 text-sm font-bold">IMPORTANT:</h4>
-                <p className="text-blue-100">When communicating with {missionData.target.name}, maintain your cover as {missionData.alias.name}. The target expects a response related to poker when they say &quot;The stakes are high tonight&quot;. Mentioning the word &quot;pineapple&quot; will reveal the poison name, and &quot;apple&quot; will reveal the location.</p>
+                <p className="text-blue-100">When communicating with {missionData.target.name}, maintain your cover as {missionData.alias.name}. We believe that there may be malicious activity being planned by Le Chiffre for the poker game. Try to find out what they've done.</p>
               </div>
             </div>
           </div>
