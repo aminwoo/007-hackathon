@@ -1,14 +1,9 @@
 'use client';
 
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import SoundControl from './SoundControl';
-
-// Import AudioPlayer with dynamic import
-const AudioPlayer = dynamic(() => import('./AudioPlayer'), { ssr: false });
 
 export default function HomeClient() {
   const router = useRouter();
@@ -38,8 +33,6 @@ export default function HomeClient() {
   }, [router]);
   return (
     <>
-      <AudioPlayer />
-      <SoundControl />
       <div className="max-w-4xl mx-auto" onClick={handleSkipAnimations}>
         {/* Terminal Header */}
         <div className={`border-b border-green-700 mb-8 pb-4 ${skipAnimations ? 'opacity-100' : 'fade-in header-fade-in'}`}>

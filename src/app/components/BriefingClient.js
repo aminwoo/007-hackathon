@@ -1,13 +1,8 @@
 'use client';
 
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from 'react';
-import SoundControl from './SoundControl';
-
-// Import AudioPlayer with dynamic import
-const AudioPlayer = dynamic(() => import('./BriefingAudioPlayer'), { ssr: false });
 
 export default function BriefingClient({ missionId = '0_le_chiffre' }) {
   const [missionData, setMissionData] = useState(null);
@@ -53,8 +48,6 @@ export default function BriefingClient({ missionId = '0_le_chiffre' }) {
   }
   return (
     <>
-      <AudioPlayer />
-      <SoundControl />
       <div className="max-w-4xl mx-auto" onClick={handleSkipAnimations}>
         {/* Top Secret Header */}
         <div className={`border-b-2 border-red-600 mb-8 pb-4 ${skipAnimations ? 'opacity-100' : 'fade-in'}`} style={skipAnimations ? {} : { animationDuration: '1s' }}>
