@@ -221,20 +221,53 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
   
   // Update an objective by numeric ID
   const updateObjective = (id) => {
+    // Check if the objective was previously incomplete
+    const objective = objectives.find(obj => obj.id === id);
+    const wasIncomplete = objective && !objective.completed;
+    
+    console.log(`Updating objective ${id}, was incomplete: ${wasIncomplete}`);
+    
     setObjectives(prev => 
       prev.map(obj => 
         obj.id === id ? { ...obj, completed: true } : obj
       )
     );
+    
+    // Add Bond's acknowledgment only if the objective was previously incomplete
+    if (wasIncomplete) {
+      console.log(`Adding Bond acknowledgment for objective ${id}`);
+      const bondAcknowledgment = {
+        sender: 'bond-hint',
+        text: "Good work, agent. You've completed an objective. Keep going.",
+        time: new Date().toLocaleTimeString()
+      };
+      setMessages(prev => [...prev, bondAcknowledgment]);
+    }
   };
+  
+  // Track newly completed objectives to avoid multiple messages
+  const [newlyCompletedObjectives, setNewlyCompletedObjectives] = useState([]);
   
   // Update an objective by string ID
   const updateObjectiveById = (id) => {
-    setObjectives(prev => 
-      prev.map(obj => 
+    // Check if the objective was previously incomplete
+    const objective = objectives.find(obj => obj.id === id);
+    const wasIncomplete = objective && !objective.completed;
+    
+    console.log(`Updating objective by ID ${id}, was incomplete: ${wasIncomplete}`);
+    
+    // Update the objectives state
+    setObjectives(prev => {
+      const updatedObjectives = prev.map(obj => 
         obj.id === id ? { ...obj, completed: true } : obj
-      )
-    );
+      );
+      return updatedObjectives;
+    });
+    
+    // If the objective was previously incomplete, add it to the newly completed list
+    if (wasIncomplete) {
+      setNewlyCompletedObjectives(prev => [...prev, id]);
+    }
   };
   
   // Check if all objectives are completed
@@ -255,15 +288,23 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     if (allCompleted && !gameEnded) {
       console.log("All objectives completed and game not ended yet. Ending game...");
       
+      // Add Bond's congratulatory message for completing all objectives
+      const bondCongratulation = {
+        sender: 'bond-hint',
+        text: "Excellent work, agent! You've completed all objectives. Mission accomplished. M will be pleased.",
+        time: new Date().toLocaleTimeString()
+      };
+      setMessages(prev => [...prev, bondCongratulation]);
+      
       // Set game as ended to prevent multiple calls
       setGameEnded(true);
       
-      // Show game over popup with success reason
+      // Show game over popup with success reason after a delay to allow reading Bond's message
       setGameOverReason('success');
       setTimeout(() => {
         console.log("Showing game over popup");
         setShowGameOverPopup(true);
-      }, 1000); // Small delay to allow player to see all objectives completed
+      }, 3000); // Longer delay to allow player to read Bond's congratulatory message
     }
   };
   
@@ -405,14 +446,34 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
       // Check if all objectives are completed after updating
       setTimeout(() => {
         checkAllObjectivesCompleted();
+        
+        // If there are newly completed objectives, acknowledge them with a single message
+        if (newlyCompletedObjectives.length > 0) {
+          console.log(`Acknowledging ${newlyCompletedObjectives.length} newly completed objectives`);
+          
+          // Add Bond's acknowledgment for completing objectives
+          const bondAcknowledgment = {
+            sender: 'bond-hint',
+            text: newlyCompletedObjectives.length === 1 
+              ? "Good work, agent. You've completed an objective. Keep going."
+              : `Good work, agent. You've completed ${newlyCompletedObjectives.length} objectives.`,
+            time: new Date().toLocaleTimeString()
+          };
+          setMessages(prev => [...prev, bondAcknowledgment]);
+          
+          // Reset the newly completed objectives
+          setNewlyCompletedObjectives([]);
+        }
       }, 100);
       
       // Simulate typing delay for realism
       setTimeout(() => {
         setMessages(prev => [...prev, leChiffreResponse]);
         
-        // If Bond has an interjection, add it after a short delay
-        if (hasBondInterjection) {
+        // If Bond has an interjection and not all objectives are completed, add it after a short delay
+        // Bond shouldn't give advice if all objectives are already completed
+        const allObjectivesCompleted = objectives.every(obj => obj.completed);
+        if (hasBondInterjection && !allObjectivesCompleted) {
           setTimeout(() => {
             const bondInterjection = {
               sender: 'bond-hint',
