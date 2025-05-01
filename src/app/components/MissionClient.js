@@ -407,13 +407,30 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
         time: new Date().toLocaleTimeString()
       };
       
+      // Check if Bond should interject with a hint
+      const hasBondInterjection = data.bondInterjection !== undefined;
+      
       // Check if all objectives are completed after updating
       setTimeout(() => {
         checkAllObjectivesCompleted();
       }, 100);
+      
       // Simulate typing delay for realism
       setTimeout(() => {
         setMessages(prev => [...prev, leChiffreResponse]);
+        
+        // If Bond has an interjection, add it after a short delay
+        if (hasBondInterjection) {
+          setTimeout(() => {
+            const bondInterjection = {
+              sender: 'bond-hint',
+              text: data.bondInterjection,
+              time: new Date().toLocaleTimeString()
+            };
+            setMessages(prev => [...prev, bondInterjection]);
+          }, 1000);
+        }
+        
         setIsTyping(false);
       }, 1500);
     } catch (err) {
@@ -503,15 +520,34 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
                     msg.sender === "bond" ? "justify-end" : "justify-start"
                   }`}
                 >
+                  {msg.sender === 'bond-hint' && (
+                    <div className="w-12 h-12 mr-2 border-2 border-green-700 overflow-hidden flex-shrink-0">
+                      <Image
+                        src="/images/daniel-craig-007.jpg-303a730.png"
+                        alt="James Bond"
+                        width={48}
+                        height={48}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  )}
                   <div
                     className={`max-w-[70%] p-3 rounded-lg ${
                       msg.sender === "bond"
                         ? "bg-blue-900 text-blue-100"
                         : msg.sender === "le-chiffre"
                         ? "bg-gray-800 text-gray-300"
+                        : msg.sender === "bond-hint"
+                        ? "bg-green-900 text-green-100 border border-green-700"
                         : "bg-gray-700 text-gray-400 italic text-sm"
                     }`}
                   >
+                    {msg.sender === 'bond-hint' && (
+                      <div className="flex items-center mb-2 text-green-300 text-xs font-bold">
+                        <span className="mr-1">007:</span>
+                        <span className="bg-green-800 px-1 rounded">SECURE CHANNEL</span>
+                      </div>
+                    )}
                     <p>{msg.text}</p>
                     <p className="text-xs text-right mt-1 opacity-70">
                       {msg.time}
