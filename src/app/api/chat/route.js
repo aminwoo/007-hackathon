@@ -51,6 +51,7 @@ export async function POST(request) {
       // model: 'gpt-3.5-turbo',
       model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       messages: conversationWithSystem,
+      seed: 123,
       max_tokens: 1024, // Increased max_tokens to ensure we get the complete JSON response
       temperature: 0,
       // stream: false
