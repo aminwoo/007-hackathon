@@ -39,6 +39,78 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
     // Default to the static image from mission data
     return missionData?.target.img;
   };
+
+
+  // Parse message as json
+  function parseMessage(jsonString) {
+      // try {
+        // Try to parse the message as JSON
+        // let jsonString = data.message;
+        
+        // Replace single quotes with double quotes for JSON compatibility
+        // First, try to parse it directly in case it's already valid JSON
+      try { JSON.parse(jsonString);
+        // If we get here, the JSON is already valid, no need to replace quotes
+      } catch (e) {
+        console.log("JSON parsing failed, attempting to fix quotes...");
+        
+        // More comprehensive approach to handle single quotes in JSON
+        // Step 1: Replace property names with single quotes
+        jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3');
+        
+        // Step 2: Replace property values with single quotes
+        // This is more complex as we need to handle nested objects and arrays
+        let inString = false;
+        let inSingleQuoteString = false;
+        let escaped = false;
+        let result = '';
+        
+        for (let i = 0; i < jsonString.length; i++) {
+          const char = jsonString[i];
+          const nextChar = i < jsonString.length - 1 ? jsonString[i + 1] : '';
+          
+          // Handle escape sequences
+          if (char === '\\' && !escaped) {
+            escaped = true;
+            result += char;
+            continue;
+          }
+          
+          // Handle string boundaries
+          if (char === '"' && !escaped) {
+            inString = !inString;
+          } else if (char === "'" && !escaped && !inString) {
+            inSingleQuoteString = !inSingleQuoteString;
+            // Replace single quote with double quote
+            result += '"';
+            continue;
+          }
+          
+          // Add character to result
+          if (!inSingleQuoteString) {
+            result += char;
+          } else {
+            // Inside a single-quoted string, escape any double quotes
+            if (char === '"') {
+              result += '\\' + char;
+            } else {
+              result += char;
+            }
+          }
+          
+          escaped = false;
+        }
+        
+        jsonString = result;
+        // console.log("Fixed JSON string:", jsonString);
+      }
+      
+    //}// catch (e) { console.error('Error parsing inner JSON:', e);
+      // console.error('Original message:', data.message);
+    //}
+    return jsonString
+    // }
+  }
   
   // Load mission data
   useEffect(() => {
@@ -58,7 +130,8 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
           },
           { 
             sender: 'le-chiffre', 
-            text: data.prompt[1].content,
+            text: JSON.parse(data.prompt[1].content).message,
+            rawText: data.prompt[1].content,
             time: new Date().toLocaleTimeString()
           }
         ]);
@@ -109,8 +182,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
       setDisplayedSussLevel(current => {
         // If we're close enough, just set to the target value
         if (Math.abs(current - sussLevel) <= animationStep) {
-          return sussLevel;
-        }
+          return sussLevel; }
         
         // Otherwise, move toward the target value
         return current < sussLevel 
@@ -244,7 +316,7 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
         .filter(msg => msg.sender !== 'system') // Remove system messages
         .map(msg => ({
           role: msg.sender === 'bond' ? 'user' : 'assistant',
-          content: msg.text
+          content: msg.rawText || msg.text
         }));
 
       // Add the new user message
@@ -279,88 +351,30 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
       
       if (typeof data.message === 'string' && 
           (data.message.trim().startsWith('{') || data.message.trim().startsWith('{'))) {
-        try {
-          // Try to parse the message as JSON
-          let jsonString = data.message;
-          
-          // Replace single quotes with double quotes for JSON compatibility
-          // First, try to parse it directly in case it's already valid JSON
           try {
-            JSON.parse(jsonString);
-            // If we get here, the JSON is already valid, no need to replace quotes
+            // Try to parse the message as JSON
+            let jsonString = data.message;
+            jsonString = parseMessage(jsonString);
+            const innerData = JSON.parse(jsonString);
+            parsedData = innerData;
+            messageText = innerData.message;
+            rawText = jsonString;
+      console.log("Parsed inner JSON:", innerData);
           } catch (e) {
-            console.log("JSON parsing failed, attempting to fix quotes...");
-            
-            // More comprehensive approach to handle single quotes in JSON
-            // Step 1: Replace property names with single quotes
-            jsonString = jsonString.replace(/([{,]\s*)\'([^}:,]+)\'(\s*:)/g, '$1"$2"$3');
-            
-            // Step 2: Replace property values with single quotes
-            // This is more complex as we need to handle nested objects and arrays
-            let inString = false;
-            let inSingleQuoteString = false;
-            let escaped = false;
-            let result = '';
-            
-            for (let i = 0; i < jsonString.length; i++) {
-              const char = jsonString[i];
-              const nextChar = i < jsonString.length - 1 ? jsonString[i + 1] : '';
-              
-              // Handle escape sequences
-              if (char === '\\' && !escaped) {
-                escaped = true;
-                result += char;
-                continue;
-              }
-              
-              // Handle string boundaries
-              if (char === '"' && !escaped) {
-                inString = !inString;
-              } else if (char === "'" && !escaped && !inString) {
-                inSingleQuoteString = !inSingleQuoteString;
-                // Replace single quote with double quote
-                result += '"';
-                continue;
-              }
-              
-              // Add character to result
-              if (!inSingleQuoteString) {
-                result += char;
-              } else {
-                // Inside a single-quoted string, escape any double quotes
-                if (char === '"') {
-                  result += '\\' + char;
-                } else {
-                  result += char;
-                }
-              }
-              
-              escaped = false;
-            }
-            
-            jsonString = result;
-            console.log("Fixed JSON string:", jsonString);
+             console.error('Error parsing inner JSON:', e);
+             console.error('Original message:', data.message);
           }
-          
-          const innerData = JSON.parse(jsonString);
-          parsedData = innerData;
-          messageText = innerData.message;
-          console.log("Parsed inner JSON:", innerData);
-        } catch (e) {
-          console.error('Error parsing inner JSON:', e);
-          console.error('Original message:', data.message);
-        }
-      }
-
+    }
       // Update trust level if provided in the response
       if (parsedData.trust !== undefined) {
         // Handle trust as a delta (change) rather than an absolute value
-        setSussLevel(prevLevel => {
-          // Calculate new trust level by adding the delta
-          const newLevel = Math.min(100, Math.max(0, prevLevel + parsedData.trust));
-          console.log(`Trust delta: ${parsedData.trust}, Previous level: ${prevLevel}, New level: ${newLevel}`);
-          return newLevel;
-        });
+        // setSussLevel(prevLevel => {
+        //   // Calculate new trust level by adding the delta
+        //   const newLevel = Math.min(100, Math.max(0, prevLevel + parsedData.trust));
+        //   console.log(`Trust delta: ${parsedData.trust}, Previous level: ${prevLevel}, New level: ${newLevel}`);
+        //   return newLevel;
+        // });
+        setSussLevel(parsedData.trust)
       }
       
       // Update objectives based on the response
@@ -375,35 +389,13 @@ export default function MissionClient({ missionId = '0_le_chiffre' }) {
             updateObjectiveById(objectiveId);
           }
         });
-      } else {
-        // Handle flat objectives format (backward compatibility)
-        if (missionId === '0_le_chiffre') {
-          // Check for poison objective
-          if (parsedData.poisonObjective === 1) {
-            updateObjectiveById('poisonObjective');
-          }
-          
-          // Check for location objective
-          if (parsedData.locationObjective === 1) {
-            updateObjectiveById('locationObjective');
-          }
-        } else if (missionId === '1_raoul_silva') {
-          // Check for location objective
-          if (parsedData.locationObjective === 1) {
-            updateObjectiveById('locationObjective');
-          }
-          
-          // Check for plan objective
-          if (parsedData.planObjective === 1) {
-            updateObjectiveById('planObjective');
-          }
-        }
       }
 
       // Add Le Chiffre's response
       const leChiffreResponse = {
         sender: 'le-chiffre',
         text: messageText || data.message,
+        rawText: data.message,
         time: new Date().toLocaleTimeString()
       };
       

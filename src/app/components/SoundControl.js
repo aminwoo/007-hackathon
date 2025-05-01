@@ -14,7 +14,25 @@ export default function SoundControl() {
     audioElements.forEach(audio => {
       audio.muted = newMuteState;
     });
+    
+    // Store mute preference in localStorage
+    localStorage.setItem('007-sound-muted', newMuteState.toString());
   };
+  
+  // Check localStorage for mute preference on mount
+  useEffect(() => {
+    const storedMutePreference = localStorage.getItem('007-sound-muted');
+    if (storedMutePreference !== null) {
+      const shouldMute = storedMutePreference === 'true';
+      setIsMuted(shouldMute);
+      
+      // Apply mute setting to all audio elements
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        audio.muted = shouldMute;
+      });
+    }
+  }, []);
 
   return (
     <button 
