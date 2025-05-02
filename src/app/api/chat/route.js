@@ -3,9 +3,166 @@ import OpenAI from 'openai';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.API_KEY,
-  baseURL: process.env.BASE_URL
+    apiKey: process.env.API_KEY,
+    baseURL: process.env.BASE_URL
 });
+
+// Helper function to determine if Bond should interject
+function shouldBondInterject(messages, objectives, missionId) {
+  // Get only user messages
+  const userMessages = messages.filter(msg => msg.role === 'user');
+  
+  // Don't interject if fewer than 2 messages
+  if (userMessages.length < 2) return false;
+  
+  // Random chance of interjection (50%)
+  const randomChance = Math.random() < 0.2;
+  
+  // Check for keywords that might indicate the player is stuck
+  const lastMessage = userMessages[userMessages.length - 1].content.toLowerCase();
+  const stuckKeywords = ['help', 'hint', 'stuck', 'confused', 'what should', 'don\'t know'];
+  const isPlayerStuck = stuckKeywords.some(keyword => lastMessage.includes(keyword));
+  
+  // Check for Australian English or slang
+  const aussieSlang = [
+    'mate', 'g\'day', 'crikey', 'strewth', 'fair dinkum', 'bloody', 'ripper', 'bonza', 'arvo',
+    'barbie', 'brekkie', 'bloke', 'sheila', 'dunno', 'footy', 'grog', 'maccas', 'no worries',
+    'reckon', 'ta', 'yeah nah', 'nah yeah', 'too right', 'true blue', 'woop woop', 'youse',
+    'deadset', 'heaps', 'servo', 'bottle-o', 'chockers', 'flat out', 'sook', 'ute', 'whinge'
+  ];
+  const usesAussieSlang = aussieSlang.some(slang => {
+    // Check for whole words, not just substrings
+    const regex = new RegExp(`\\b${slang}\\b`, 'i');
+    return regex.test(lastMessage);
+  });
+  
+  // If Australian slang is detected, Bond should definitely interject
+  if (usesAussieSlang) {
+    return true;
+  }
+  
+  // Check for mission-specific triggers
+  let missionTriggers = false;
+  // if (missionId === '0_le_chiffre') {
+  //   // Le Chiffre mission triggers
+  //   const poisonKeywords = ['poison', 'drink', 'kill', 'assassination'];
+  //   const locationKeywords = ['location', 'where', 'place', 'meet'];
+  //   
+  //   missionTriggers = poisonKeywords.some(keyword => lastMessage.includes(keyword)) || 
+  //                     locationKeywords.some(keyword => lastMessage.includes(keyword));
+  // } else if (missionId === '1_raoul_silva') {
+  //   // Raoul Silva mission triggers
+  //   const locationKeywords = ['island', 'hideout', 'where', 'location'];
+  //   const planKeywords = ['plan', 'attack', 'scheme', 'target'];
+  //   
+  //   missionTriggers = locationKeywords.some(keyword => lastMessage.includes(keyword)) || 
+  //                     planKeywords.some(keyword => lastMessage.includes(keyword));
+  // }
+  
+  // Return true if any condition is met
+  // return isPlayerStuck || missionTriggers || randomChance;
+  return false
+}
+
+// Function to get an appropriate Bond interjection
+function getBondInterjection(messages, objectives, missionId) {
+  // Get only user messages
+  const userMessages = messages.filter(msg => msg.role === 'user');
+  const lastMessage = userMessages[userMessages.length - 1].content.toLowerCase();
+  
+  // Check for Australian English or slang
+  const aussieSlang = [
+    'mate', 'g\'day', 'crikey', 'strewth', 'fair dinkum', 'bloody', 'ripper', 'bonza', 'arvo',
+    'barbie', 'brekkie', 'bloke', 'sheila', 'dunno', 'footy', 'grog', 'maccas', 'no worries',
+    'reckon', 'ta', 'yeah nah', 'nah yeah', 'too right', 'true blue', 'woop woop', 'youse',
+    'deadset', 'heaps', 'servo', 'bottle-o', 'chockers', 'flat out', 'sook', 'ute', 'whinge'
+  ];
+  
+  const usesAussieSlang = aussieSlang.some(slang => {
+    const regex = new RegExp(`\\b${slang}\\b`, 'i');
+    return regex.test(lastMessage);
+  });
+  
+  // Special responses for Australian slang
+  if (usesAussieSlang) {
+    const aussieResponses = [
+      "007, remember you're Mr. Hinx, not an Australian tourist. Maintain your cover.",
+      "Bond here. That Australian slang will blow your cover. Stick to your character's speech patterns.",
+      "This isn't the time for Australian expressions. Stay in character as Mr. Hinx.",
+      "Your Australian vernacular is compromising the mission. Revert to your cover identity immediately.",
+      "That's not how Mr. Hinx would speak. Maintain your cover identity at all times."
+    ];
+    return aussieResponses[Math.floor(Math.random() * aussieResponses.length)];
+  }
+  
+  // Generic hints
+  const genericHints = [
+    "Remember your training, 007. Build trust gradually before asking for sensitive information.",
+    "Stay in character. Mr. Hinx wouldn't be too direct or suspicious.",
+    "Try referencing information that only a trusted associate would know.",
+    "You're doing well. Keep the conversation natural and don't rush.",
+    "Remember the authentication phrases from your briefing.",
+    "Establish rapport first before diving into sensitive topics.",
+    "Use subtle approaches rather than direct questions.",
+    "Mention mutual contacts to build credibility.",
+    "If you sense suspicion, back off and try a different approach.",
+    "Sometimes sharing a small piece of information can get them to share more in return."
+  ];
+  
+  // Mission-specific hints
+  let missionHints = [];
+  if (missionId === '0_le_chiffre') {
+    // Check which objectives are completed
+    const poisonObjectiveComplete = objectives && objectives.poisonObjective === 1;
+    const locationObjectiveComplete = objectives && objectives.locationObjective === 1;
+    
+    if (!poisonObjectiveComplete) {
+      missionHints.push(
+        "Le Chiffre might reveal the poison name if you mention poker or gambling.",
+        "Try asking about the 'special ingredient' for Bond's drink.",
+        "He may have tasked his henchmen with modifying the cards somehow."
+      );
+    }
+    
+    if (!locationObjectiveComplete) {
+      missionHints.push(
+        "We need to know where the exchange will take place. Try to steer the conversation toward meeting locations.",
+        "Ask about logistics for the upcoming operation.",
+        "Try asking where you should meet to collect the materials.",
+        "Inquire about the rendezvous point for the operation."
+      );
+    }
+  } else if (missionId === '1_raoul_silva') {
+    // Raoul Silva mission hints
+    const locationObjectiveComplete = objectives && objectives.locationObjective === 1;
+    const planObjectiveComplete = objectives && objectives.planObjective === 1;
+    
+    if (!locationObjectiveComplete) {
+      missionHints.push(
+        "Silva is hiding somewhere. Try to get him to reveal his location.",
+        "Ask about his base of operations or where he's staying.",
+        "Silva is proud of his hideout. Appeal to his ego.",
+        "Inquire about where he's been hiding since his escape.",
+        "Ask if he has a secure location where you could meet him."
+      );
+    }
+    
+    if (!planObjectiveComplete) {
+      missionHints.push(
+        "We need to know Silva's plan. Try asking about his next move.",
+        "Silva wants revenge. Use that to get him talking about his plans.",
+        "Ask about his timeline or what he plans to do next.",
+        "Inquire about his plans for M and MI6.",
+        "Ask how he intends to make his big statement against the intelligence community."
+      );
+    }
+  }
+  
+  // Combine hints and select one
+  const allHints = [...missionHints, ...genericHints];
+  const randomIndex = Math.floor(Math.random() * allHints.length);
+  return allHints[randomIndex];
+}
 
 export async function POST(request) {
   try {
@@ -48,8 +205,7 @@ export async function POST(request) {
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      // model: 'gpt-3.5-turbo',
-      model: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+      model: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
       messages: conversationWithSystem,
       seed: 123,
       max_tokens: 1024, // Increased max_tokens to ensure we get the complete JSON response
@@ -103,6 +259,18 @@ export async function POST(request) {
       }
     } catch (parseError) {
       console.log('Response was not valid JSON, using raw content:', parseError);
+    }
+    
+    // Check if Bond should interject with a hint
+    const shouldInterject = shouldBondInterject(messages, responseData.objectives, missionId);
+    
+    if (shouldInterject) {
+      // Get an appropriate interjection
+      const bondInterjection = getBondInterjection(messages, responseData.objectives, missionId);
+      
+      // Add the interjection to the response
+      responseData.bondInterjection = bondInterjection;
+      console.log('Adding Bond interjection:', bondInterjection);
     }
     
     return NextResponse.json(responseData);
